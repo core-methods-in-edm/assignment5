@@ -8,7 +8,7 @@ For this assignment we will be using data from the Assistments Intelligent Tutor
 
 #Install & call libraries
 ```{r}
-install.packages("party", "rpart")
+##install.packages("party", "rpart")
 
 library(rpart)
 library(party)
@@ -43,8 +43,10 @@ hist(D1$score)
 
 #Create a categorical outcome variable based on student score to advise the teacher using an "ifelse" statement
 ```{r}
-D1$advice <- ifelse(D1$score <=0.4, "intervene", ifelse(D1$score > 0.4 & D1$score <=0.8, "monitor", "no action"))
+D1$advice <- ifelse(D1$score <=0.4, "intervene", ifelse(D1$score > 0.4 & D1$score <=0.8, "monitor", "no action")
 ```
+D2$correct <- ifelse(D2$prediction == "no action", 1, 0)
+
 
 #Build a decision tree that predicts "advice" based on how many problems students have answered before, the percentage of those problems they got correct and how many hints they required
 ```{r}
@@ -58,5 +60,33 @@ plot(score_ctree)
 
 Please interpret the tree, which two behaviors do you think the teacher should most closely pay attemtion to?
 
+The tree tells us that starting from how many number of hints student requested in the current session, if students ask for a lot of hints ( more than 12) then teachers should not have no action, and should definitely intervene/monitor 
+
+If the number of hints is smaller than 12 but bigger than 0, then depending on the prior percentage of correct answer students get, teachers will decide whether to intervene or not 
+
+If the students did not ask for any hints, then depending on the number of problems students has done prior to the session, teachers will decide on the intervention. If students did more than 85 problems then teachers without any hints then teachers should not intervene/monitor 
+
+The tree tells us that a teacher should most closely pay attention to the number of hints the student requested in the current session, and the prior percentage of correct problems students got. These 2 variables will tell a teacher the most information about intervention 
+
+
+
 #Test Tree
 Upload the data "intelligent_tutor_new.csv" and use the predict function (D2$prediction <- predict(score_ctree, D2)) to predict the assignments of the new data set. What is the error rate on your predictions of the new data? 
+
+
+D2 <- read.table("intelligent_tutor_new.csv", sep = ",", header = TRUE)
+
+D2$prediction <- predict(score_ctree, D2)
+### Create the new correct variable to compare D2 prediction with D2 score 
+
+D2$correct <- ifelse(D2$prediction == "no action", 1, 0)
+
+### Calculate the mean of D2$correct
+
+summary(D2$correct)
+
+### The percentage of correct is 58%. That means the error rate is 0.42
+
+
+
+
