@@ -58,5 +58,23 @@ plot(score_ctree)
 
 Please interpret the tree, which two behaviors do you think the teacher should most closely pay attemtion to?
 
+Teachers should pay attention to students who took a lot of hints, take hints yet still get the wrong answer or students who do not take hint but previously the number of problems a student has done in the system prior to the surrent session is also low.
+
 #Test Tree
 Upload the data "intelligent_tutor_new.csv" and use the predict function (D2$prediction <- predict(score_ctree, D2)) to predict the assignments of the new data set. What is the error rate on your predictions of the new data? 
+
+There are 58% of the is correct. The code is attached below.
+So the error rate is 0.42
+
+#Upload Data
+```{r}
+# Load new dataset
+D2 <- read.table("intelligent_tutor_new.csv", sep = ",", header = TRUE)
+# Create new variable prediction based on previous function
+D2$prediction <- predict(score_ctree, D2)
+# Create new variable to see if the prediction is correct, 1 = correct  and 0 = not correct
+D2$correct <- ifelse (D2$prediction == "no action", 1, 0) 
+mean(D2$correct) # find the percentage of correct
+hist(D2$correct) # create histogram
+
+```
