@@ -86,5 +86,6 @@ D2$prediction <- predict(score_ctree, D2)
 
 D2$iserror <- ifelse(D2$prediction == "monitor", 1, 0)
 error_rate <- mean(D2$iserror)
+error_rate
 ```
 ##Error rate is `r error_rate`%
