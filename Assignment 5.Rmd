@@ -1,7 +1,7 @@
 ---
 title: "Assignment 5 - Decision Trees"
-author: "Charles Lang"
-date: "November 9, 2016"
+author: "Sam Pepe"
+date: "November 11, 2016"
 output: html_document
 ---
 For this assignment we will be using data from the Assistments Intelligent Tutoring system. This system gives students hints based on how they perform on math problems. 
@@ -27,7 +27,7 @@ c.tree <- rpart(action ~ hint.y + complete, method="class", data=D1) #Notice the
 
 #Look at the error of this tree
 printcp(c.tree)
-
+#1-(38/100) = 62% error rate 
 #Plot the tree
 post(c.tree, file = "tree.ps", title = "Session Completion Action: 1 - Ask teacher, 2 - Start new session, 3 - Give up")
 
@@ -57,6 +57,24 @@ plot(score_ctree)
 ```
 
 Please interpret the tree, which two behaviors do you think the teacher should most closely pay attemtion to?
+```{r}
+#'rules' for advice using this tree: 
+# -if student asks for 0 hints, no intervention 
+#-if student asks for more than one hint monitor 
+# given these  rules, the teacher needs to pay attention to prior percent correct and number of hints asked for
+```
+
 
 #Test Tree
 Upload the data "intelligent_tutor_new.csv" and use the predict function (D2$prediction <- predict(score_ctree, D2)) to predict the assignments of the new data set. What is the error rate on your predictions of the new data? 
+
+```{r}
+ D2 <- read.csv("intelligent_tutor_new.csv")
+D2$prediction <- predict(score_ctree, D2)
+D2$correct <- ifelse (D2$prediction == "no action", 1, 0) 
+summary(D2$correct)
+  # Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+  # 0.00    0.00    1.00    0.58    1.00    1.00 
+  # error rate= 1-.58= .42 or 42% 
+```
+
