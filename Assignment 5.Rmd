@@ -8,10 +8,11 @@ For this assignment we will be using data from the Assistments Intelligent Tutor
 
 #Install & call libraries
 ```{r}
-install.packages("party", "rpart")
+install.packages("party", repos = "http://cran.us.r-project.org") 
+install.packages("rpart", repos = "http://cran.us.r-project.org")
 
-library(rpart)
 library(party)
+library(rpart)
 ```
 
 #Upload Data
@@ -19,7 +20,7 @@ library(party)
 D1 <- read.table("intelligent_tutor.csv", sep = ",", header = TRUE)
 ```
 
-##Classification Tree
+#Classification Tree
 First we will build a classification tree to predict which students ask a teacher for help, which start a new session, or which give up, based on whether or not the student completed a session (D1$complete) and whether or not they asked for hints (D1$hint.y). 
 ```{r}
 
@@ -56,7 +57,35 @@ score_ctree <- ctree(factor(advice) ~ prior_prob_count + prior_percent_correct +
 plot(score_ctree)
 ```
 
-Please interpret the tree, which two behaviors do you think the teacher should most closely pay attemtion to?
+##Please interpret the tree, which two behaviors do you think the teacher should most closely pay attemtion to?
+
+* The students with the highest scores ("no action" group) largely have used 0 hints and completed greater than 85 problems (Node 4). Because students fitting that description are very unlikely to require an intervention, it is probably ok to let those students continue at their own pace.
+  
+* There are a significant number of students in each of the other leaves who are in need of intervention (approximate values shown):
+    + Node 3: 26 (18%)
+    + Node 7: 19 (29%)
+    + Node 8:  8 (18%)
+    + Node 9: 18 (39%)  
+  
+* Similarly, there are a significant number of students in each of the leaves who are in need of monitoring (approximate values shown):
+    + Node 3: 55 (38%)
+    + Node 4: 18 (24%)
+    + Node 7: 40 (60%)
+    + Node 8: 20 (44%)
+    + Node 9: 27 (59%)  
+  
+ * This tree does not serve as an effective model for classifying students as underperforming, since significant proportions of each leaf contain students who are either in need of monitoring or interventions.
+
 
 #Test Tree
-Upload the data "intelligent_tutor_new.csv" and use the predict function (D2$prediction <- predict(score_ctree, D2)) to predict the assignments of the new data set. What is the error rate on your predictions of the new data? 
+Upload the data "intelligent_tutor_new.csv" and use the predict function (D2$prediction <- predict(score_ctree, D2)) to predict the assignments of the new data set. What is the error rate on your predictions of the new data?
+
+```{r}
+D2 <- read.table("intelligent_tutor_new.csv", sep = ",", header = TRUE)
+D2$prediction <- predict(score_ctree, D2)
+
+D2$iserror <- ifelse(D2$prediction == "monitor", 1, 0)
+error_rate <- mean(D2$iserror)
+error_rate
+```
+##Error rate is 42%
