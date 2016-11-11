@@ -31,6 +31,8 @@ printcp(c.tree)
 #Plot the tree
 post(c.tree, file = "tree.ps", title = "Session Completion Action: 1 - Ask teacher, 2 - Start new session, 3 - Give up")
 
+#Graph interpretation
+Out of three groups only 65 out of 378 were correctly assigned to the ask teacher group, 35 out of 378 were correctly assigned to restart group, and 44 out of 378 were correctly assigned to give up group.
 ```
 #Regression Tree
 
@@ -58,5 +60,63 @@ plot(score_ctree)
 
 Please interpret the tree, which two behaviors do you think the teacher should most closely pay attemtion to?
 
+```{r}
+First student are divided into two groups of students who asked for no hint or some amount of hint, and if the student asked for no hint, the graph counts for how many questions which they attempted to solve it (left side of the tree), down below that line there are two groups based on how many questions attempted (node3, node4), and it seems like they have the least (node 4) need for the intervention. Still 18% (out of 145 people) of node 3 people should be intervined. Different from the left, at the right side of the tree, there are students who asked more than 12 hints but still struggling. Especially for Node 9, there are 40% (out of 46 students) of students who are still strugling even with the hint so this group of people need the most intervention. Between node 7 and 8, node 7 people should be intervined more since their prior percent correct was less than 63% even if they got less than 12 hints (which is decent).
+```
+
+#codebook
+id - student id prior_prob_count - The number of problems a student has done in the system prior to the surrent session
+score - The score the student achieved in the current session
+hints - The number of hints the student requested in the current session
+hint.y - Whether or not the student asked for hints in the current session
+complete - Whether or not the student completed the cirrent session
+action - The action suggested by the system to a teacher about a given student based on their performance
+post command post script image, vector graphic (tiff,pdf)
+
 #Test Tree
 Upload the data "intelligent_tutor_new.csv" and use the predict function (D2$prediction <- predict(score_ctree, D2)) to predict the assignments of the new data set. What is the error rate on your predictions of the new data? 
+
+```{r}
+#open D2 data
+D2 <- read.table("intelligent_tutor_new.csv", sep = ",", header = TRUE)
+#prediction fuction using 
+D2$prediction <- predict(score_ctree, D2)
+View(D2)
+hist(D2$score)
+#classification tree to predict which students ask a teacher for help, which start a new session, or which give up, based on whether or not the student completed a session (D1$complete) and whether or not they asked for hints (D1$hint.y). 
+c.tree2 <- rpart(prediction ~ hints +prior_prob_count+ prior_percent_correct, method="class", data=D2) 
+printcp(c.tree2)
+
+Classification tree:
+rpart(formula = prediction ~ hints + prior_prob_count + prior_percent_correct, 
+    data = D2, method = "class")
+
+Variables actually used in tree construction:
+[1] hints
+
+Root node error: 84/200 = 0.42
+
+n= 200 
+
+    CP nsplit rel error xerror     xstd
+1 1.00      0         1      1 0.083095
+2 0.01      1         0      0 0.000000
+hist(D2$hints)
+#breaked the hints into 5 and 10 variable and grouped them into different action groups (less than, between 5 and 60, and more than 60)
+hist(D2$hints, breaks = c(0,5,10,20,30,40,50,60,80))
+D2$hintsC <- ifelse(D2$hints <=5, "no action", ifelse(D2$hints >60 & D1$score <=60, "action", "monitor"))
+#comparing two different plot before break and after break (X= prediction of hintsC, Y= decison tree predict advice based on prior prob count, prior percent correct, and hints)
+#prediction (no action,monitor)
+hint_ctree <- ctree(factor(prediction) ~ prior_prob_count + prior_percent_correct + hints, D2)
+plot(hint_ctree)
+hintsC (noaction, action, monitor)
+hint_ctree2 <- ctree(factor(hintsC) ~ prior_prob_count + prior_percent_correct + hints, D2)
+plot(hint_ctree2)
+#interpretation
+hint_ctree2 - 2 people should be definetly monitored based on their frequent hint use, 39 people should be moniotored and 159 people does not have to take action. In here I defined problem as rather than how correct question they got then actual attempts to get hint.
+hint_ctree - 84 people are getting hints and 116 people are getting no hint
+Since in hint_ctree2 allowed more people for using less than 5 hint as no action required group, and there were three different group, it allowed more explanation rather than using zero hint or at least one hint group.
+Still,the error rate would be 0.42 even if we categorized into different ways...
+
+(root node error: 84/200 = 0.42)
+```
