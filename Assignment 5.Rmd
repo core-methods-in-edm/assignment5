@@ -7,8 +7,10 @@ output: html_document
 For this assignment we will be using data from the Assistments Intelligent Tutoring system. This system gives students hints based on how they perform on math problems. 
 
 #Install & call libraries
-```{r}
-install.packages("party", "rpart")
+```{r include=FALSE, cache=FALSE}
+#setwd("C:/Users/Magdalena Bennett/Dropbox/PhD Columbia/Fall 2016/Core Methods in EDM/assignment5")
+
+#install.packages("party", "rpart")
 
 library(rpart)
 library(party)
@@ -25,11 +27,17 @@ First we will build a classification tree to predict which students ask a teache
 
 c.tree <- rpart(action ~ hint.y + complete, method="class", data=D1) #Notice the standard R notion for a formula X ~ Y
 
+c.tree
+
 #Look at the error of this tree
 printcp(c.tree)
 
 #Plot the tree
 post(c.tree, file = "tree.ps", title = "Session Completion Action: 1 - Ask teacher, 2 - Start new session, 3 - Give up")
+
+par(xpd = TRUE)
+plot(c.tree, compress = TRUE)
+text(c.tree, use.n = TRUE)
 
 ```
 #Regression Tree
@@ -44,6 +52,8 @@ hist(D1$score)
 #Create a categorical outcome variable based on student score to advise the teacher using an "ifelse" statement
 ```{r}
 D1$advice <- ifelse(D1$score <=0.4, "intervene", ifelse(D1$score > 0.4 & D1$score <=0.8, "monitor", "no action"))
+
+table(D1$advice)
 ```
 
 #Build a decision tree that predicts "advice" based on how many problems students have answered before, the percentage of those problems they got correct and how many hints they required
@@ -54,9 +64,47 @@ score_ctree <- ctree(factor(advice) ~ prior_prob_count + prior_percent_correct +
 #Plot tree
 ```{r}
 plot(score_ctree)
+
+score_ctree
+
+table(D1$advice, predict(score_ctree), dnn = c("Actual advice", "Predicted advice"))
 ```
 
 Please interpret the tree, which two behaviors do you think the teacher should most closely pay attemtion to?
 
+- First, if the student doesn't ask for hints (hints==0), then we analyze how many *prior_prob_count* they had. If they had 85 or less, we assign them to node 3; if they had more than 85, we assign them to node 4.
+- Going back to the top of the tree, if students asked for hints (hint>0), then we classify them according to the number of hints they asked. If they asked for more than 12, we assign them to node 9. If they asked for 12 hints or less, then we analyz the prior percentage of correct answers. If they had 60% or less, we assign them no node 7; if they have more than 60%, we assign them to node 8.
+
+- In each node, we can see the distribution of predictions. For examples:
+
+-- In node 3 (145 students), just under 20% are likely to be assigned to intervention, around 40% to monitoring and just over 40% to "no action".
+
+-- In node 4 (76 students), almost no one is likely to be assigned to intervention, around 25% to monitoring, and around 75% to "no action".
+
+-- In node 7 (66 students), 30% are likely to be assigned to intervention, 60% to monitor and 10% to "no action".
+
+-- In node 8 (45 students), 20% are likely to be assigned to intervention, just over 40% to monitor, and just under 40% to "no action".
+
+-- Finally in node 9 (46 students), 40% are likely to be assigned to intervention, just under 60% to monitor, and almost no one to "no action".
+
+- If we observe the predictions, however, we see that no students is assigned to interventions, according to the prediction (for that true category, they are more likely to be assigned monitoring). For true "monitoring" advice, only a few more students are assigned to monitoring than no action, according to the prediction. Finally, the prediction for "no action" seems to fit the data better. This could mean that the variables *hints* and how the student did previously are not such a good indicators of the score (the variable that was used to construct the score).
+
+
 #Test Tree
-Upload the data "intelligent_tutor_new.csv" and use the predict function (D2$prediction <- predict(score_ctree, D2)) to predict the assignments of the new data set. What is the error rate on your predictions of the new data? 
+Upload the data "intelligent_tutor_new.csv" and use the predict function (D2$prediction <- predict(score_ctree, D2)) to predict the assignments of the new data set. What is the error rate on your predictions of the new data?
+```{r}
+D2 <- read.table("intelligent_tutor_new.csv", sep = ",", header = TRUE)
+
+D2$advice <- ifelse(D2$score <=0.4, "intervene", ifelse(D2$score > 0.4 & D2$score <=0.8, "monitor", "no action"))
+
+score_ctree <- ctree(factor(advice) ~ prior_prob_count + prior_percent_correct + hints, D2)
+
+score_ctree
+
+D2$prediction <- predict(score_ctree, D2)
+
+table(D2$advice,D2$prediction)
+
+```
+
+- In this case there is no error rate on the predictions of the new data, because the scores in this dataset are constant (==1 for all obervations), so there is no variation. Thus, all get correctly assigned to the predicted category "no action", as the previous table shows.
