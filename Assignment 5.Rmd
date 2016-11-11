@@ -58,5 +58,46 @@ plot(score_ctree)
 
 Please interpret the tree, which two behaviors do you think the teacher should most closely pay attemtion to?
 
+```{r}
+#Chart Legend: I think...  Black = Intervene    Gray = Monitor  White = No Actoin
+
+#Students in nodes 3 and 4 utilized zero hints.  Node four has little to no students who need an intervention, this group is those who used 0 hints and answered more than 85 Q's.  Node three has slightly less than 20% who should have an intervention.  
+
+#Node 7 and 8 represent two groups that both used 1-12 hints.  The difference is that node 8 had 62.9% correct, while node 7 had </ 62.9% correct.  Node 9 is for students who used more than 12 hints.  Node 9 may only have 46 students, but everyone is wither in need of monitoring or intervention (roughly 39% intervention).  Node 7 is also intersting because around 89% are in need of intervention or monitoring.  Thus node 7 and 9 are the two behaviors/groups that the teacher should pay close attention to. 
+```
+
 #Test Tree
 Upload the data "intelligent_tutor_new.csv" and use the predict function (D2$prediction <- predict(score_ctree, D2)) to predict the assignments of the new data set. What is the error rate on your predictions of the new data? 
+
+
+```{r}
+
+D2<-read.table("intelligent_tutor_new.csv",header=TRUE,sep=",")
+
+(D2$prediction <- predict(score_ctree, D2))
+
+# 84 = Monitor  116=no action 200=total   84/200 = 0.42 = 42%
+or mean(D3$prediction2)
+
+c.tree2<- rpart(prediction2 ~ hints + prior_percent_correct, method="class", data=D3)
+
+printcp(c.tree2)
+
+Root node error: 84/200 = 0.42
+
+hist(D3$hints)
+
+D3$hints2 <- ifelse(D3$hints <=5, "no action", ifelse(D3$hints < 25 & D3$hints <=25, "monitor", "intervene"))
+
+#not sure why the above code works...  The last section should be >= (this does not work), but <= works.  Does < and > work in a counterintuitive way?
+
+hint_ctree <- ctree(factor(hints2) ~ prior_prob_count + prior_percent_correct + hints, D3)
+
+plot(hint_ctree)
+
+Root node error: 84/200 = 0.42
+The error rate is 42%
+
+```
+
+Is there a way to make our graphs interactive (for example... when you put your mouse over a part in a chart, the chart part (say node 3 intervene bar for score ctree rplot) gives you an exact quantity)?
