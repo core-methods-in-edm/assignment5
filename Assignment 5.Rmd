@@ -23,7 +23,9 @@ D1 <- read.table("intelligent_tutor.csv", sep = ",", header = TRUE)
 First we will build a classification tree to predict which students ask a teacher for help, which start a new session, or which give up, based on whether or not the student completed a session (D1$complete) and whether or not they asked for hints (D1$hint.y). 
 ```{r}
 
-c.tree <- rpart(action ~ hint.y + complete, method="class", data=D1) #Notice the standard R notion for a formula X ~ Y
+c.tree <- rpart(action ~ hint.y + complete, method="class", data=D1) 
+
+#Notice the standard R notion for a formula X ~ Y
 
 #Look at the error of this tree
 printcp(c.tree)
@@ -58,5 +60,28 @@ plot(score_ctree)
 
 Please interpret the tree, which two behaviors do you think the teacher should most closely pay attemtion to?
 
+based on score_ctree.pdf plot, students who ask for more than 12 hints and students who ask for less than 12 hints but also have prior percent correct less than .629
+
 #Test Tree
 Upload the data "intelligent_tutor_new.csv" and use the predict function (D2$prediction <- predict(score_ctree, D2)) to predict the assignments of the new data set. What is the error rate on your predictions of the new data? 
+
+```{r}
+D2 <- read.table("intelligent_tutor_new.csv", sep = ",", header = TRUE)
+
+D2$prediction <- predict(score_ctree, D2)
+
+D2$advice <- ifelse(D2$score <=0.4, "intervene", ifelse(D2$score > 0.4 & D2$score <=0.8, "monitor", "no action"))
+
+#figure out how to do ifelse statement - if this then 1, otherwise 0, add up everything divide by total number 
+
+#what variables should be here? what does the error rate measure against? 
+#wrong one c.treenew <- rpart(action ~ hint.y + complete, method="class", data=D2) 
+
+score_ctree <- ctree(factor(advice) ~ prior_prob_count + prior_percent_correct + hints, D1)
+
+#Look at the error of this tree
+printcp(c.treenew)
+
+#Plot the tree
+post(c.treenew, file = "treenew.ps", title = "Session Completion Action: 1 - Ask teacher, 2 - Start new session, 3 - Give up")
+```
