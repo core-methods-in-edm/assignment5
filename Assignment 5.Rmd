@@ -57,6 +57,20 @@ plot(score_ctree)
 ```
 
 Please interpret the tree, which two behaviors do you think the teacher should most closely pay attemtion to?
+ They should look at hints prior percent correct
 
 #Test Tree
-Upload the data "intelligent_tutor_new.csv" and use the predict function (D2$prediction <- predict(score_ctree, D2)) to predict the assignments of the new data set. What is the error rate on your predictions of the new data? 
+Upload the data "intelligent_tutor_new.csv" and use the predict function (D2$prediction <- predict(score_ctree, D2)) to predict the assignments of the new data set. What is the error rate on your predictions of the new data?
+
+```{r}
+
+
+C1 <- read.table("intelligent_tutor_new.csv", sep = ",", header = TRUE)
+C1$pred2 <- ifelse(C1$prediction == "no action", 1, 0)
+error<-sum(C1$pred2)/length(C1$pred2)
+error2<- 1-error
+
+#You get .58 at percent correct, therefore it is only a tiny bit better than random guessing
+
+```
+
