@@ -17,6 +17,7 @@ library(party)
 #Upload Data
 ```{r}
 D1 <- read.table("intelligent_tutor.csv", sep = ",", header = TRUE)
+D2 <- read.table("intelligent_tutor_new.csv", sep = ",", header = TRUE)
 ```
 
 ##Classification Tree
@@ -58,17 +59,19 @@ plot(score_ctree)
 
 Please interpret the tree, which two behaviors do you think the teacher should most closely pay attemtion to?
 
+
+### Group 7 and 9 seems need the most attention from teacher; their hints are given more and their scores are still low, which means their achievements require them more with attention and intervene.
+
 #Test Tree
-Upload the data "intelligent_tutor_new.csv". This is a data set of a differnt sample of students doing the same problems in the same system. We can use the tree we built for the previous data set to try to predict the "advice" we should give the teacher about these new students. 
+Upload the data "intelligent_tutor_new.csv" and use the predict function (D2$prediction <- predict(score_ctree, D2)) to predict the assignments of the new data set.  
 
 ```{r}
-#Upload new data
-
-D2 <- 
-
-#Generate predicted advice for new students based on tree generated from old students
-
 D2$prediction <- predict(score_ctree, D2)
 
-``` 
-Compare the predicted advice with the actual advice that these studnts recieved. What is the difference between the observed and predicted results?
+#What is the error rate on your predictions of the new data?
+D2$count <- ifelse(D2$prediction == "monitor", 1, 0) 
+errors <- length(which(D2$count == 1))
+errors
+#There are 84 errors in prediction
+```
+
