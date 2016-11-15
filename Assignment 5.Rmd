@@ -8,8 +8,6 @@ For this assignment we will be using data from the Assistments Intelligent Tutor
 
 #Install & call libraries
 ```{r}
-install.packages("party", "rpart")
-
 library(rpart)
 library(party)
 ```
@@ -56,7 +54,60 @@ score_ctree <- ctree(factor(advice) ~ prior_prob_count + prior_percent_correct +
 plot(score_ctree)
 ```
 
-Please interpret the tree, which two behaviors do you think the teacher should most closely pay attemtion to?
+Please interpret the tree, which two behaviors do you think the teacher should most closely pay attention to?
+
+The teacher should pay attention to the prior percent correct is less than 0.629 and if hints used are greater than 12. 
+
+_______________________________
+_______________________________
 
 #Test Tree
 Upload the data "intelligent_tutor_new.csv" and use the predict function (D2$prediction <- predict(score_ctree, D2)) to predict the assignments of the new data set. What is the error rate on your predictions of the new data? 
+
+#Upload Data
+```{r}
+D2 <- read.table("intelligent_tutor_new.csv", sep = ",", header = TRUE)
+D2$prediction <- predict(score_ctree, D2)
+```
+
+```{r}
+c2.tree <- rpart(prediction ~ hints +prior_prob_count+ prior_percent_correct, method="class", data=D2) 
+printcp(c2.tree)
+rpart(formula = prediction ~ hints + prior_prob_count + prior_percent_correct, 
+    data = D2, method = "class")
+hist(D2$hints)
+D2$advice2 <- ifelse(D2$hints <=5, "no action", ifelse(D2$hints < 25 & D2$hints <=25, "monitor", "intervene"))
+hint_ctree <- ctree(factor(advice2) ~ prior_prob_count + prior_percent_correct + hints, D2)
+```
+
+```{r}
+plot(hint_ctree)
+```
+
+#Root node error: 84/200 = 0.42
+#The error rate is 42%
+
+#Classification tree:
+#rpart(formula = prediction ~ hints + prior_prob_count + prior_percent_correct, 
+#   data = D2, method = "class")
+
+#Variables actually used in tree construction:
+#[1] hints
+
+#Root node error: 84/200 = 0.42
+
+#n= 200 
+
+#    CP nsplit rel error xerror     xstd
+#1 1.00      0         1      1 0.083095
+#2 0.01      1         0      0 0.000000
+#> rpart(formula = prediction ~ hints + prior_prob_count + prior_percent_correct, 
+#+     data = D2, method = "class")
+#n= 200 
+
+#node), split, n, loss, yval, (yprob)
+#      * denotes terminal node
+
+# 1) root 200 84 no action (0.0000000 0.4200000 0.5800000)  
+# 2) hints>=0.5 84  0 monitor (0.0000000 1.0000000 0.0000000) *
+# 3) hints< 0.5 116  0 no action (0.0000000 0.0000000 1.0000000) *
