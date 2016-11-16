@@ -8,8 +8,6 @@ For this assignment we will be using data from the Assistments Intelligent Tutor
 
 #Install & call libraries
 ```{r}
-install.packages("party", "rpart")
-
 library(rpart)
 library(party)
 ```
@@ -58,5 +56,21 @@ plot(score_ctree)
 
 Please interpret the tree, which two behaviors do you think the teacher should most closely pay attemtion to?
 
+From the tree, the teachers should closely pat attention to the students 1.who asks for hints and have prior problem percent correct rate less than 62.9%; 2. who asks for hints more than 12 times.
+
 #Test Tree
 Upload the data "intelligent_tutor_new.csv" and use the predict function (D2$prediction <- predict(score_ctree, D2)) to predict the assignments of the new data set. What is the error rate on your predictions of the new data? 
+
+```{r}
+D2 <- read.table("intelligent_tutor_new.csv", sep = ",", header = TRUE)
+
+D2$prediction <- predict(score_ctree, D2)
+
+D3 <- dplyr::count(D2, prediction)
+
+D3
+```
+
+#Compare the predicted advice with the actual advice that these studnts recieved. What is the difference between the observed and predicted results?
+
+In this data set, all the student have score as 1. According to the first data set, the teachers have no action. However, this prediction model suggests 84 students need mornitoring by teachers, which is wrong. The error rate is 84/(84+116) = 84/200 = 42%. 
