@@ -1,42 +1,57 @@
 ---
-title: "Assignment 5 - Decision Trees"
-author: "Charles Lang"
+title: "Assignment 5 - Decision Trees - 1"
+author: "Shreya"
 date: "November 9, 2016"
 output: html_document
 ---
 For this assignment we will be using data from the Assistments Intelligent Tutoring system. This system gives students hints based on how they perform on math problems. 
 
+
+
 #Install & call libraries
 ```{r}
-install.packages("party", "rpart")
-
+install.packages("party")
+install.packages("rpart")
 library(rpart)
 library(party)
 ```
+
+
 
 #Upload Data
 ```{r}
 D1 <- read.table("intelligent_tutor.csv", sep = ",", header = TRUE)
 ```
 
-##Classification Tree
-First we will build a classification tree to predict which students ask a teacher for help, which start a new session, or which give up, based on whether or not the student completed a session (D1$complete) and whether or not they asked for hints (D1$hint.y). 
-```{r}
 
-c.tree <- rpart(action ~ hint.y + complete, method="class", data=D1) #Notice the standard R notion for a formula X ~ Y
+##Classification Tree
+First we will build a classification tree to predict which students ask a teacher for help, which start a new session, or which give up, based on whether or not the student completed a session (D1$complete) and whether or not they asked for hints (D1$hint.y).
+
+```{r}
+c.tree <- rpart(action ~ hint.y + complete, method="class", data=D1)
+```
+
+Notice the standard R notion for a formula X ~ Y
 
 #Look at the error of this tree
+
+```{r}
 printcp(c.tree)
+```
 
 #Plot the tree
-post(c.tree, file = "tree.ps", title = "Session Completion Action: 1 - Ask teacher, 2 - Start new session, 3 - Give up")
 
+```{r}
+post(c.tree, file = "tree.ps", title = "Session Completion Action: 1 - Ask teacher, 2 - Start new session, 3 - Give up")
 ```
+
 #Regression Tree
 
 We want to see if we can build a decision tree to help teachers decide which students to follow up with, based on students' performance in Assistments. We will create three groups ("teacher should intervene", "teacher should monitor student progress" and "no action") based on students' previous use of the system and how many hints they use. To do this we will be building a decision tree using the "party" package. The party package builds decision trees based on a set of statistical stopping rules.
 
 #Take a look at our outcome variable "score"
+#Rplot1
+
 ```{r}
 hist(D1$score)
 ```
@@ -47,28 +62,95 @@ D1$advice <- ifelse(D1$score <=0.4, "intervene", ifelse(D1$score > 0.4 & D1$scor
 ```
 
 #Build a decision tree that predicts "advice" based on how many problems students have answered before, the percentage of those problems they got correct and how many hints they required
+
 ```{r}
 score_ctree <- ctree(factor(advice) ~ prior_prob_count + prior_percent_correct + hints, D1)
 ```
 
 #Plot tree
+
 ```{r}
 plot(score_ctree)
 ```
 
-Please interpret the tree, which two behaviors do you think the teacher should most closely pay attemtion to?
+Interpretation of the tree :
+
+If the students are taking 0 hints there are 2 further nodes/groups based on the prior problem count.
+Node 3: where prior problem count is <=85. the teacher may need to monitor or take no action at all.
+Node 4: where prior problem count is >85, the teacher neednot take any action. The students will perform well.
+
+If the students are taking more than 0 hints there are 2 further nodes/groups based on the hints again. 
+Node 9: where students take more than 12 hints, in this case the teachers to pay most attention by either monitoring or intervening in the course. Almost all students need some kind of attention.
+
+The other branch where students take hints between 0 to 12 in number is again divided into 2 groups/nodes
+Node 7: where prior percent correct is <=0.63; The teacher needs to monitor in this case. very few students need no action in this group.
+Node 8: where prior percent correct is >0.63; the teacher may still need to monitor this group, inspite of the fact that the second majority of students need no attention at all.
+
+
+Group 7 and 9  inspite of taking hints need attention from their teacher; while group 3 and 4 are performing better than 7, 8, 9 inspite of not taking any hints.
+group 9 inspite of takig more than 12 hints is not performing well and seeks one of the 2 highest levels of attention from their teacher after group 7.
+
+
+
+
+
+
+
+
+
 
 #Test Tree
+
 Upload the data "intelligent_tutor_new.csv". This is a data set of a differnt sample of students doing the same problems in the same system. We can use the tree we built for the previous data set to try to predict the "advice" we should give the teacher about these new students. 
 
-```{r}
 #Upload new data
 
-D2 <- 
+```{r}
+D2 <- read.table("intelligent_tutor_new.csv", sep = ",", header = TRUE)
+``` 
 
 #Generate predicted advice for new students based on tree generated from old students
 
+```{r}
 D2$prediction <- predict(score_ctree, D2)
+```
 
-``` 
+#look at the outcome of hints, and modify the scale of the histogram
+
+```{r}
+hist(D2$hints)
+```
+
+#Create a categorical outcome variable based on hints student use to advise the teacher using an "ifelse" statement
+
+```{r}
+D2$hints1 <- ifelse(D2$hints >= 2, "intervene", ifelse(D2$hints <= 2 & D2$hints <= 0, "no action", "monitor"))
+```
+
+#grow the regression tree
+
+```{r}
+score_ctree1 <- ctree(factor(hints1) ~ prior_prob_count + prior_percent_correct + hints, D2)
+plot(score_ctree1)
+```
+
+The classification tree shows that 
+Node 3: the students in this group take <= 0 hints and score correct, hence are predicted where no action is required on the part of the teacher.
+Node 4: where students take less than equal to1 but more than zero hints, i.e. take 1 hint, they may or may not perform upto the required levels and the teacher needs to monitor them.
+Node 5: where students are taking more than 1 hint are not performing well and the teacher needs to intervene in this group to improve their performance levels.
+
+#grow the classfication tree
+
+```{r}
+c.tree2 <- rpart(prediction ~ prior_prob_count + prior_percent_correct + hints, method="class", data=D2)
+```
+
+#Look at the error of this tree; examine the results
+
+```{r}
+printcp(c.tree2)
+```
+
 Compare the predicted advice with the actual advice that these studnts recieved. What is the difference between the observed and predicted results?
+
+According to the predictions the students never needed to be intervened by an teacher while in reality there were a lot of students who needed to be intervened, while they were not told to according to actual observation.
