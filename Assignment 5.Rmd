@@ -23,7 +23,7 @@ D1 <- read.table("~/Desktop/HUDK 4050/Assignment#5_Jing/intelligent_tutor.csv", 
 First we will build a classification tree to predict which students ask a teacher for help, which start a new session, or which give up, based on whether or not the student completed a session (D1$complete) and whether or not they asked for hints (D1$hint.y). 
 ```{r}
 #grow the tree
-c.tree <- rpart(action ~ hint.y + complete, method="class", data=D1) #Notice the standard R notion for a formula X ~ Y
+c.tree <- rpart(action ~ hint.y + complete, method="class", data=D1) #Notice the standard R notion for a formula X ~ Yc
 
 #Look at the error of this tree; examine the results
 printcp(c.tree)
@@ -32,9 +32,12 @@ printcp(c.tree)
 post(c.tree, file = "tree.ps", title = "Session Completion Action: 1 - Ask teacher, 2 - Start new session, 3 - Give up")
 
 #tree.ps
+##the model predicts that: among student who did not complete the task, there were 65+57+52 students ask the teacher, however, the data says that there are only 65 (correct prediction) students ask the teachers, 57 start new session and 52 give up.
+# for the students who did not complete the task, the model predicts that 57+71+76 students would give up. But the data says that 76 students gave up, 57 students ask teachers and 71 start new session. 
 
+#For the students who did not complete the class, among them, if they asked for hints, the model predicts that 30+35+32 of them would start new session. But the data says that 35 would start new session, 30 would ask teachers and 32 would give up. If they did not ask for hints, the model predicts that 27+36+44 students would give up, but the data says that 44 students gave up, 27 asked teachers and 36 started new session. 
 ```
-#Regression Tree
+#Regression Tree 
 
 We want to see if we can build a decision tree to help teachers decide which students to follow up with, based on students' performance in Assistments. We will create three groups ("teacher should intervene", "teacher should monitor student progress" and "no action") based on students' previous use of the system and how many hints they use. To do this we will be building a decision tree using the "party" package. The party package builds decision trees based on a set of statistical stopping rules.
 
@@ -57,14 +60,17 @@ score_ctree <- ctree(factor(advice) ~ prior_prob_count + prior_percent_correct +
 #Plot tree
 ```{r}
 plot(score_ctree)
+## need to interpret
 
 ```
 
 Please interpret the tree, which two behaviors do you think the teacher should most closely pay attemtion to?
 #question? p in the circle are p-values?
 # Teachers should most closely pay attention to students with these two behaviors:
-# 1. students who requested over 12 hints 
-# 2. students with certain amount of hints (between 0 and 12) whose prior correctness rate is less than 62.9%
+# 1. students who requested over 12 hints, 40% of them need interventon
+# 2. students with certain amount of hints (between 0 and 12) whose prior correctness rate is less than 62.9%, 30% of them need intervention
+# 4.students who requested over 12 hints, 60% of them need monitor?
+# 5. students with certain amount of hints (between 0 and 12) whose prior correctness rate is less than 62.9%, 60% of them need monitor?
 
 #Test Tree
 Upload the data "intelligent_tutor_new.csv" and use the predict function (D2$prediction <- predict(score_ctree, D2)) to predict the assignments of the new data set. What is the error rate on your predictions of the new data? 
@@ -74,22 +80,21 @@ D2 <- read.table("~/Desktop/HUDK 4050/Assignment#5_Jing/intelligent_tutor_new.cs
 
 D2$prediction <- predict(score_ctree, D2)
 
-#look at the outcome of hints, and modify the scale of the histogram
-hist(D2$hints,breaks=c(0,5,10,20,30,40,50,60,70,80))
+D2 <- read.table("intelligent_tutor_new.csv", sep = ",", header = TRUE)
 
-#Create a categorical outcome variable based on hints student use to advise the teacher using an "ifelse" statement
-D2$hints1 <- ifelse(D2$hints >=5, "intervene", ifelse(D2$hints<=5 & D2$hints<=0, "monitor", "no action"))
-#having problem here setting the rules, I want "no action" labeled when D2$hints=0,but it ended up with no "no action" labels...
+#Create prediction variable in D2 using the score tree
+D2$prediction <- predict(score_ctree, D2)
 
-#grow the regression tree
-score_ctree1 <- ctree(factor(hints1) ~ prior_prob_count + prior_percent_correct + hints, D2)
+#Take a look at the prediction result
+table(D2$prediction)
+#intervene   monitor no action 
+#        0        84       116 
 
-plot(score_ctree1)
+#To calculate the error rate, compare the prediction with students' scores
+D2$actual <- ifelse(D2$score <=0.4, "intervene", ifelse(D2$score > 0.4 & D2$score <=0.8, "monitor", "no action"))
+compare <- table(D2$actual == D2$prediction)/length(D2$actual)
+compare[1]
 
-#grow the classfication tree
-c.tree2 <- rpart(prediction ~ prior_prob_count + prior_percent_correct + hints, method="class", data=D2)
-
-#Look at the error of this tree; examine the results
-printcp(c.tree2)
+#the error rate is 42%
 
 ```
