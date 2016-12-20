@@ -8,8 +8,6 @@ For this assignment we will be using data from the Assistments Intelligent Tutor
 
 #Install & call libraries
 ```{r}
-install.packages("party", "rpart")
-
 library(rpart)
 library(party)
 ```
@@ -17,20 +15,30 @@ library(party)
 #Upload Data
 ```{r}
 D1 <- read.table("intelligent_tutor.csv", sep = ",", header = TRUE)
+
 ```
 
 ##Classification Tree
 First we will build a classification tree to predict which students ask a teacher for help, which start a new session, or which give up, based on whether or not the student completed a session (D1$complete) and whether or not they asked for hints (D1$hint.y). 
 ```{r}
 
-c.tree <- rpart(action ~ hint.y + complete, method="class", data=D1) #Notice the standard R notion for a formula X ~ Y
+c.tree <- rpart(action ~ hint.y + complete, method="class", data=D1) 
+#Notice the standard R notion for a formula X ~ Y
+
+#Take a look at the three variables
+table(D1$action)
+table(D1$hint.y)
+table(D1$complete)
 
 #Look at the error of this tree
 printcp(c.tree)
+# The tree uses binary variables complete and hint.y (which are observations) to map students into action classes. It uses a procedure with an order of the variables that yields the least error. The root node error is 0.66138. It is not doing a very good job. [Q]: What are CP (complexity cost), nsplit, relative error, xerror (cross validation error), and xstd (standard dev of the cross valid error)?
 
 #Plot the tree
 post(c.tree, file = "tree.ps", title = "Session Completion Action: 1 - Ask teacher, 2 - Start new session, 3 - Give up")
-
+table(D1$action) 
+#The number 122(A1), 128(A2), 128(A3) are the number of students taken each action. See tree_binary_illustration.pdf as a supplementary explaination of how the method classifies the data.
+#[Observation] Base on whether they completed the session or not (complete = 1 or complete = 0), the method predicts they will take action 1 (ask teacher) or take action 3 (give up). For complete = 0, the method predicts correctly that 65 out of 122 (A1) will take action 1, but predicts incorrectly 57 out of 128 (A2) and 52 out of 128 (A3) will take action 1. For complete = 1, the method predicts correctly 76 out of 128 (A3) will take action 3, but predicts incorrectly 57 out of 122 (A1) and 71 out of 128 (A2) will take action 3. NEXT. Base on whether they ever used a hint or not (hint.y = 1 or hint.y = 0), the method predicts whether they will take action 2 (start new session) or take action 3 (give up). When hint.y =1, the method predicts correctly, 35 out of 128 (A2) will take action 2, but predicts incorrectly 30 out of 122 (A1) and 32 out of 128 (A3) will take action 2. When hint.y = 0, the method predicts correctly, 44 out of 128 (A3) will take action 3 but predicts incorrectly 27 out of 122 (A1) and 36 out of 128 (A2) will take action 3. 
 ```
 #Regression Tree
 
@@ -49,14 +57,64 @@ D1$advice <- ifelse(D1$score <=0.4, "intervene", ifelse(D1$score > 0.4 & D1$scor
 #Build a decision tree that predicts "advice" based on how many problems students have answered before, the percentage of those problems they got correct and how many hints they required
 ```{r}
 score_ctree <- ctree(factor(advice) ~ prior_prob_count + prior_percent_correct + hints, D1)
+#Take a look at the four variables
+summary(D1$prior_prob_count)
+# Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+# 0.0     0.0    16.5   175.8   145.2  1570.0 
+summary(D1$prior_percent_correct)
+#   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+# 0.0000  0.0000  0.4997  0.3818  0.7140  1.0000 
+summary(D1$hints)
+#   Min. 1st Qu.  Median    Mean 3rd Qu.    Max.    NA's 
+#  0.000   0.000   0.000   5.645   5.000  95.000       1 
+table(D1$advice)
+#intervene   monitor no action 
+#       72       162       144 
 ```
 
 #Plot tree
 ```{r}
-plot(score_ctree)
+#plot without p-value and id
+plot(score_ctree, inner_panel = node_inner(score_ctree, pval = FALSE, id = FALSE), terminal_panel = node_barplot(score_ctree, id = FALSE))
+#plot without barplot
+plot(score_ctree, inner_panel = node_inner(score_ctree, pval = FALSE, id = FALSE), terminal_panel = node_terminal(score_ctree, id = FALSE))
+#This returns the probability. 
+#n1 = 145, y1 = (0.172, 0.386, 0.441); 
+#n2 = 76, y2 = (0.026, 0.25, 0.724); 
+#n3 = 66, y3 = (0.288, 0.606, 0.106); 
+#n4 = 45, y4 = (0.178, 0.444,0.378); 
+#n5 = 45, y5 = (0.391, 0.587, 0.022).
+
 ```
 
-Please interpret the tree, which two behaviors do you think the teacher should most closely pay attemtion to?
+Please interpret the tree, which two behaviors do you think the teacher should most closely pay attention to?
+
+```{r}
+###Depending on whether a student uses a hint or not (hints > 0 or hints = 0), the tree divides the data into two groups. 
+##Under the group with hints = 0, the method looks at prior problem count and divides this group into two smaller classes at prior_prob_count = 85. There are 145 students who use no hints and prior_prob_count < or = 85, 44.1% of the time the method reccomends no action. Since students in the training data set who have taken these actions received a high score does not mean the same would happen for students in another data set. It is risky to leave students who do not do many problems nor use hints unintervened and unmonitored. Also, notice that this is the largest group, so if this same trend happens for another data set, it will affect many students. There are 76 students who did not use hint but have a problem count larger than 85, 72.4% of the time the method reccomends no action. Not using hints and doing many problems do not guarantee good performance for another data set, so by the same argument as above, high percentage of no action is risky. Therefore, teacher most closely pay attention to when a student uses no hint and does many problems.
+##For hints > 0, the method further divide this group to hints > 12 and hints < or = 12. 
+#For students who use hints more than 12 times, under this method, the teacher rarely responds with no action (only 2.2% of the time for 46 students); 58.7% of the students are monitored and 39.1% are intervened. Therefore, when a student use hints more than 12 times, it can be considered safe since more aggressive approach is taken.
+#For students who use hints less than or equal 12 times, the method divides them into finer groups with the value prior_percent_correct = 0.629. For students with correctness 62.9% or higher, 17.8% would be intervened, 44.4% would be monitored and 37.8% would be taken no action. This pattern makes sense since for students who taken some hints and achieve a moderately high level of correctness means they showed an attempt and did not do badly. Therefore, only a small percentage of students are being intervened. Moreover, the percentage of no action is lower than monitor so this is a rather conservative approach. On the other hand, for students with prior_percent_correct < or = 62.9%, most of them are monitored (60.6%) or intervened (28.8%) and only 10.6% were left with no action. It also makes sense since when a student does not perform so well prior to the exam, a teacher should either monitor or intervene.
+```
 
 #Test Tree
 Upload the data "intelligent_tutor_new.csv" and use the predict function (D2$prediction <- predict(score_ctree, D2)) to predict the assignments of the new data set. What is the error rate on your predictions of the new data? 
+
+```{r}
+#Upload new data and save as D2
+D2 <- read.table("intelligent_tutor_new.csv", sep = ",", header = TRUE)
+
+#Create prediction variable in D2 using the score tree
+D2$prediction <- predict(score_ctree, D2)
+
+#Take a look at the prediction result
+table(D2$prediction)
+#intervene   monitor no action 
+#        0        84       116 
+
+#To calculate the error rate, compare the prediction with students' scores
+D2$actual <- ifelse(D2$score <=0.4, "intervene", ifelse(D2$score > 0.4 & D2$score <=0.8, "monitor", "no action"))
+compare <- table(D2$actual == D2$prediction)/length(D2$actual)
+compare[1]
+#It is wrong 42% of the time.
+```
