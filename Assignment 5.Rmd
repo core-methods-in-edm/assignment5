@@ -7,7 +7,7 @@ output: html_document
 For this assignment we will be using data from the Assistments Intelligent Tutoring system. This system gives students hints based on how they perform on math problems. 
 
 #Install & call libraries
-```{r}
+```{r,eval=FALSE}
 install.packages("party", "rpart")
 
 library(rpart)
@@ -15,13 +15,13 @@ library(party)
 ```
 
 #Upload Data
-```{r}
-D1 <- read.table("intelligent_tutor.csv", sep = ",", header = TRUE)
+```{r,eval=FALSE}
+D1 <- read.table("~/Documents/VLB SCHOOL - ALL/TC.CU.2015-16/Learning Analytics FALL2016/Projects/assignment5/intelligent_tutor.csv", sep = ",", header = TRUE)
 ```
 
 ##Classification Tree
 First we will build a classification tree to predict which students ask a teacher for help, which start a new session, or which give up, based on whether or not the student completed a session (D1$complete) and whether or not they asked for hints (D1$hint.y). 
-```{r}
+```{r,eval=FALSE}
 
 c.tree <- rpart(action ~ hint.y + complete, method="class", data=D1) #Notice the standard R notion for a formula X ~ Y
 
@@ -37,38 +37,66 @@ post(c.tree, file = "tree.ps", title = "Session Completion Action: 1 - Ask teach
 We want to see if we can build a decision tree to help teachers decide which students to follow up with, based on students' performance in Assistments. We will create three groups ("teacher should intervene", "teacher should monitor student progress" and "no action") based on students' previous use of the system and how many hints they use. To do this we will be building a decision tree using the "party" package. The party package builds decision trees based on a set of statistical stopping rules.
 
 #Take a look at our outcome variable "score"
-```{r}
+```{r,eval=FALSE}
 hist(D1$score)
 ```
 
 #Create a categorical outcome variable based on student score to advise the teacher using an "ifelse" statement
-```{r}
+```{r,eval=FALSE}
 D1$advice <- ifelse(D1$score <=0.4, "intervene", ifelse(D1$score > 0.4 & D1$score <=0.8, "monitor", "no action"))
 ```
 
 #Build a decision tree that predicts "advice" based on how many problems students have answered before, the percentage of those problems they got correct and how many hints they required
-```{r}
+```{r,eval=FALSE}
 score_ctree <- ctree(factor(advice) ~ prior_prob_count + prior_percent_correct + hints, D1)
 ```
 
 #Plot tree
-```{r}
+```{r,eval=FALSE}
 plot(score_ctree)
 ```
 
 Please interpret the tree, which two behaviors do you think the teacher should most closely pay attemtion to?
+#Teachers should pay more attention with these 2 behaviors:
+#1.students who needed over 12 hints need intervention
+#2.students with certain mount of hints (between 0 & 12) whose prior correctness rate is less than 62.9% need intervention
+#3.students who needed less than or equal to 12 hints but correctness rate is higher than 62.9% need intervention
+#4.prior problem count is less than 85 teacher needs to intervene
+
 
 #Test Tree
-Upload the data "intelligent_tutor_new.csv". This is a data set of a differnt sample of students doing the same problems in the same system. We can use the tree we built for the previous data set to try to predict the "advice" we should give the teacher about these new students. 
+Upload the data "intelligent_tutor_new.csv" and use the predict function (D2$prediction <- predict(score_ctree, D2)) to predict the assignments of the new data set. What is the error rate on your predictions of the new data? 
 
-```{r}
-#Upload new data
+```{r,eval=FALSE}
+D2 <- read.csv("~/Documents/VLB SCHOOL - ALL/TC.CU.2015-16/Learning Analytics FALL2016/Projects/assignment5/intelligent_tutor_new.csv")
+```
 
-D2 <- 
 
-#Generate predicted advice for new students based on tree generated from old students
-
+```{r,eval=FALSE}
 D2$prediction <- predict(score_ctree, D2)
 
-``` 
-Compare the predicted advice with the actual advice that these studnts recieved. What is the difference between the observed and predicted results?
+#I want to take a look at the prediction result
+table(D2$prediction)
+#intervene   monitor no action 
+#       55       116        29 
+
+# So in order to calculate the error rate compare the prediction with students' scores
+D2$actual <- ifelse(D2$score <=0.4, "intervene", ifelse(D2$score > 0.4 & D2$score <=0.8, "monitor", "no action"))
+compare <-table(D2$actual == D2$prediction)/length(D2$actual)
+compare[1]
+
+#FALSE  TRUE 
+ #0.42  0.58 
+#compare[1]
+
+
+FALSE 
+ 0.42 
+ 
+ # 42% is the error rate! DONE!
+ 
+```
+
+
+
+
