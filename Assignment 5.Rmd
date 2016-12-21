@@ -75,13 +75,38 @@ D2$advice <- ifelse(D2$score <=0.4, "intervene", ifelse(D2$score > 0.4 & D2$scor
 #figure out how to do ifelse statement - if this then 1, otherwise 0, add up everything divide by total number 
 
 #what variables should be here? what does the error rate measure against? 
-#wrong one c.treenew <- rpart(action ~ hint.y + complete, method="class", data=D2) 
+#wrong one 
+c.treenew <- rpart(action ~ score + hints, method="class", data=D2) 
 
-score_ctree <- ctree(factor(advice) ~ prior_prob_count + prior_percent_correct + hints, D1)
+#Error in eval(expr, envir, enclos) : object 'action' not found
+
+score_ctree <- ctree(factor(advice) ~ prior_prob_count + prior_percent_correct + hints, D2)
 
 #Look at the error of this tree
-printcp(c.treenew)
+printcp(c.tree)
 
+Classification tree:
+rpart(formula = action ~ hint.y + complete, data = D1, method = "class")
+
+Variables actually used in tree construction:
+[1] complete hint.y  
+
+Root node error: 250/378 = 0.66138
+
+n= 378 
+
+     CP nsplit rel error xerror     xstd
+1 0.052      0     1.000  1.128 0.033851
+2 0.012      1     0.948  1.036 0.036119
+3 0.010      2     0.936  1.016 0.036513
+
+table(D2$prediction, D2$advice)
+
+# no action
+ # no action       200
+
+#scores are all 1, so predctions and actions are all none. Did I do something wrong, or was this the right end result? 
+  
 #Plot the tree
 post(c.treenew, file = "treenew.ps", title = "Session Completion Action: 1 - Ask teacher, 2 - Start new session, 3 - Give up")
 ```
