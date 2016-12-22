@@ -12,21 +12,26 @@ install.packages("party", "rpart")
 
 library(rpart)
 library(party)
+library(rpart.plot)
 ```
 
 #Upload Data
 ```{r}
 D1 <- read.table("intelligent_tutor.csv", sep = ",", header = TRUE)
+View(D1)
 ```
 
 ##Classification Tree
 First we will build a classification tree to predict which students ask a teacher for help, which start a new session, or which give up, based on whether or not the student completed a session (D1$complete) and whether or not they asked for hints (D1$hint.y). 
 ```{r}
 
-c.tree <- rpart(action ~ hint.y + complete, method="class", data=D1) #Notice the standard R notion for a formula X ~ Y
+c.tree <- rpart(action ~ hint.y + complete, method="class", data=D1) 
+#Notice the standard R notion for a formula X ~ Y
 
 #Look at the error of this tree
 printcp(c.tree)
+plot(fit, uniform=TRUE,margin=0.2)
+text(fit, use.n=TRUE, all=TRUE, cex=.8)
 
 #Plot the tree
 post(c.tree, file = "tree.ps", title = "Session Completion Action: 1 - Ask teacher, 2 - Start new session, 3 - Give up")
@@ -44,6 +49,8 @@ hist(D1$score)
 #Create a categorical outcome variable based on student score to advise the teacher using an "ifelse" statement
 ```{r}
 D1$advice <- ifelse(D1$score <=0.4, "intervene", ifelse(D1$score > 0.4 & D1$score <=0.8, "monitor", "no action"))
+
+View(D1)
 ```
 
 #Build a decision tree that predicts "advice" based on how many problems students have answered before, the percentage of those problems they got correct and how many hints they required
@@ -57,6 +64,7 @@ plot(score_ctree)
 ```
 
 Please interpret the tree, which two behaviors do you think the teacher should most closely pay attemtion to?
+#By looking at the decision tree, we can see that the largest branch with interventions is the group that receives >12 hints, so this would be something that is worth paying attention to. Additionally, if the student asks for a hint atleast once, but has a prior_percent_correct of less than .629, then intervention is more likely needed. So, the two behaviors that teachers should pay attention to the most are hints and prior percent correct.
 
 #Test Tree
 Upload the data "intelligent_tutor_new.csv". This is a data set of a differnt sample of students doing the same problems in the same system. We can use the tree we built for the previous data set to try to predict the "advice" we should give the teacher about these new students. 
@@ -64,11 +72,14 @@ Upload the data "intelligent_tutor_new.csv". This is a data set of a differnt sa
 ```{r}
 #Upload new data
 
-D2 <- 
+D2 <- read.table("intelligent_tutor_new.csv", sep = ",", header = TRUE)
+View(D2)
 
 #Generate predicted advice for new students based on tree generated from old students
 
 D2$prediction <- predict(score_ctree, D2)
+View(D2)
 
 ``` 
 Compare the predicted advice with the actual advice that these studnts recieved. What is the difference between the observed and predicted results?
+#This second csv looks like it might be corrupted? The scores are all 1, and there is no information regarding the actual advice the student received--maybe i am missing something here? Anyways, the predictions that are generated based on the characteristics that are provided show no 'intervenes' which is probably a good thing since there all of the scores are 100%--though it does seem kind of fishy that all of the scores are 1.
