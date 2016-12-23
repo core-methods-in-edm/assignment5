@@ -116,7 +116,7 @@ plot(hint_ctree2)
 hint_ctree2 - 2 people should be definetly monitored based on their frequent hint use, 39 people should be moniotored and 159 people does not have to take action. In here I defined problem as rather than how correct question they got then actual attempts to get hint.
 hint_ctree - 84 people are getting hints and 116 people are getting no hint
 Since in hint_ctree2 allowed more people for using less than 5 hint as no action required group, and there were three different group, it allowed more explanation rather than using zero hint or at least one hint group.
-Still,the error rate would be 0.42 even if we categorized into different ways...
+Still,the error rate would be 0.42 even if we categorized into different ways. 
 
 (root node error: 84/200 = 0.42)
 ```
