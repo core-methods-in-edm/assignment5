@@ -58,5 +58,23 @@ plot(score_ctree)
 
 Please interpret the tree, which two behaviors do you think the teacher should most closely pay attemtion to?
 
+#The most important two behaviors are hints and prior_prob_count because hints is the first variable used and prior_prob_count is the second variable used to determine the result.
+
 #Test Tree
 Upload the data "intelligent_tutor_new.csv" and use the predict function (D2$prediction <- predict(score_ctree, D2)) to predict the assignments of the new data set. What is the error rate on your predictions of the new data? 
+
+```{r}
+D2 = read.csv("intelligent_tutor_new.csv", sep = ",", header = TRUE)
+prediction = predict(score_ctree, D2)
+D2$advice <- ifelse(D2$score <=0.4, "intervene", ifelse(D2$score > 0.4 & D2$score <=0.8, "monitor", "no action"))
+matrix <- table(D2$advice, prediction)
+accuracy = matrix[3]/sum(matrix)
+1-accuracy
+```
+
+#The error rate is 0.42 on the predictions of the new data.
+
+
+
+
+
