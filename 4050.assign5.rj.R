@@ -49,6 +49,20 @@ plot(score_ctree)
 
 D2 <- read.csv("intelligent_tutor_new.csv")
 
+D2$prediction <- predict(score_ctree, D2)
 
+D3 <- D2
+
+sapply(D3, mode)
+
+D3 <- transform(d, char = as.numeric(char))
+
+?ifelse
+
+D3$pred2 <- ifelse(D3$prediction == "no action", 1, 0)
+error<-sum(D3$pred2)/length(D3$pred2)
+error2<- 1-error
+
+### The error is 42% ###  
 
 
