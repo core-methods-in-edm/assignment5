@@ -1,14 +1,13 @@
 ---
-title: "Assignment 5 - Decision Trees - 1"
+title: "Decision Trees"
 author: "Shreya"
 date: "November 9, 2016"
 output: html_document
 ---
-For this assignment we will be using data from the Assistments Intelligent Tutoring system. This system gives students hints based on how they perform on math problems. 
 
+We use data from the Assistments Intelligent Tutoring system. 
+This system gives students hints based on how they perform on math problems. 
 
-
-#Install & call libraries
 ```{r}
 install.packages("party")
 install.packages("rpart")
@@ -16,13 +15,9 @@ library(rpart)
 library(party)
 ```
 
-
-
-#Upload Data
 ```{r}
 D1 <- read.table("intelligent_tutor.csv", sep = ",", header = TRUE)
 ```
-
 
 ##Classification Tree
 First we will build a classification tree to predict which students ask a teacher for help, which start a new session, or which give up, based on whether or not the student completed a session (D1$complete) and whether or not they asked for hints (D1$hint.y).
@@ -49,25 +44,26 @@ post(c.tree, file = "tree.ps", title = "Session Completion Action: 1 - Ask teach
 
 We want to see if we can build a decision tree to help teachers decide which students to follow up with, based on students' performance in Assistments. We will create three groups ("teacher should intervene", "teacher should monitor student progress" and "no action") based on students' previous use of the system and how many hints they use. To do this we will be building a decision tree using the "party" package. The party package builds decision trees based on a set of statistical stopping rules.
 
-#Take a look at our outcome variable "score"
-#Rplot1
+Take a look at our outcome variable "score"
+### Rplot1
 
 ```{r}
 hist(D1$score)
 ```
 
-#Create a categorical outcome variable based on student score to advise the teacher using an "ifelse" statement
+Create a categorical outcome variable based on student score to advise the teacher using an "ifelse" statement
+
 ```{r}
 D1$advice <- ifelse(D1$score <=0.4, "intervene", ifelse(D1$score > 0.4 & D1$score <=0.8, "monitor", "no action"))
 ```
 
-#Build a decision tree that predicts "advice" based on how many problems students have answered before, the percentage of those problems they got correct and how many hints they required
+Build a decision tree that predicts "advice" based on how many problems students have answered before, the percentage of those problems they got correct and how many hints they required
 
 ```{r}
 score_ctree <- ctree(factor(advice) ~ prior_prob_count + prior_percent_correct + hints, D1)
 ```
 
-#Plot tree
+Plot tree
 
 ```{r}
 plot(score_ctree)
@@ -92,42 +88,33 @@ group 9 inspite of takig more than 12 hints is not performing well and seeks one
 
 
 
-
-
-
-
-
-
-
-#Test Tree
+### Test Tree
 
 Upload the data "intelligent_tutor_new.csv". This is a data set of a differnt sample of students doing the same problems in the same system. We can use the tree we built for the previous data set to try to predict the "advice" we should give the teacher about these new students. 
-
-#Upload new data
 
 ```{r}
 D2 <- read.table("intelligent_tutor_new.csv", sep = ",", header = TRUE)
 ``` 
 
-#Generate predicted advice for new students based on tree generated from old students
+Generate predicted advice for new students based on tree generated from old students
 
 ```{r}
 D2$prediction <- predict(score_ctree, D2)
 ```
 
-#look at the outcome of hints, and modify the scale of the histogram
+look at the outcome of hints, and modify the scale of the histogram
 
 ```{r}
 hist(D2$hints)
 ```
 
-#Create a categorical outcome variable based on hints student use to advise the teacher using an "ifelse" statement
+Create a categorical outcome variable based on hints student use to advise the teacher using an "ifelse" statement
 
 ```{r}
 D2$hints1 <- ifelse(D2$hints >= 2, "intervene", ifelse(D2$hints <= 2 & D2$hints <= 0, "no action", "monitor"))
 ```
 
-#grow the regression tree
+grow the regression tree
 
 ```{r}
 score_ctree1 <- ctree(factor(hints1) ~ prior_prob_count + prior_percent_correct + hints, D2)
@@ -139,13 +126,13 @@ Node 3: the students in this group take <= 0 hints and score correct, hence are 
 Node 4: where students take less than equal to1 but more than zero hints, i.e. take 1 hint, they may or may not perform upto the required levels and the teacher needs to monitor them.
 Node 5: where students are taking more than 1 hint are not performing well and the teacher needs to intervene in this group to improve their performance levels.
 
-#grow the classfication tree
+grow the classfication tree
 
 ```{r}
 c.tree2 <- rpart(prediction ~ prior_prob_count + prior_percent_correct + hints, method="class", data=D2)
 ```
 
-#Look at the error of this tree; examine the results
+Look at the error of this tree; examine the results
 
 ```{r}
 printcp(c.tree2)
