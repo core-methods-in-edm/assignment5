@@ -1,0 +1,110 @@
+---
+title: "Assignment 5 - Decision Trees"
+author: "Charles Lang"
+date: "November 9, 2016"
+output: html_document
+---
+For this assignment we will be using data from the Assistments Intelligent Tutoring system. This system gives students hints based on how they perform on math problems. 
+
+#Install & call libraries
+```{r}
+#install.packages("party", "rpart")
+
+library(rpart)
+library(party)
+```
+
+## Part I
+```{r}
+D1 <- read.csv("/Users/sychen/Documents/GitHub/assignment5-sychenIris/intelligent_tutor.csv", header = TRUE)
+```
+
+##Classification Tree (use rpart)
+First we will build a classification tree to predict which students ask a teacher for help, which start a new session, or which give up, based on whether or not the student completed a session (D1$complete) and whether or not they asked for hints (D1$hint.y). 
+```{r}
+
+c.tree <- rpart(action ~ hint.y + complete, method="class", data=D1) #Notice the standard R notion for a formula X ~ Y
+
+#Look at the error of this tree
+printcp(c.tree)
+
+#Plot the tree
+post(c.tree, file = "tree.ps", title = "Session Completion Action: 1 - Ask teacher, 2 - Start new session, 3 - Give up")
+```
+cp: complexity parameter: use to determine the accuracy. cost, threshold(we choose)
+xerror: cross valiadation error, iteration
+minimize cost, nsplit simplest: in this case, we choose 3.
+
+Interpretation:
+If stduents completed < 0.5 session, the student would be classified as group 1 (Ask teacher). if the stduents completed >= 0.5 session and asked for hints <0.5, then the student would be classified as group 3 (Give up); however, if the stduents completed >= 0.5 session but asked for hints >0.5, then the student would be classified as group 2 (Start new session).
+However, the reality is there will be only 65 students in the group 1 will ask teacher; 57 students will start new session and 52 students will give up. For people in group 3, 44 students will actually give up, 36 students will start new session and 44 students will ask teacher. In the group 2, there are 35 students will actually start new seesion, 30 students will ask teacher and 32 students will give up. (so there are some gap between our prediction and actual actions, but based on the index of this package, it is the best result we can get so far.)
+
+## Part II
+
+#Regression Tree (use party: already set up standard and signficance)
+--> if the relation is sig, the party will do the classification. Otherwise, it won't.
+We want to see if we can build a decision tree to help teachers decide which students to follow up with, based on students' performance in Assistments. We will create three groups ("teacher should intervene", "teacher should monitor student progress" and "no action") based on students' previous use of the system and how many hints they use. To do this we will be building a decision tree using the "party" package. The party package builds decision trees based on a set of statistical stopping rules.
+
+#Take a look at our outcome variable "score"
+```{r}
+hist(D1$score)
+```
+
+#Create a categorical outcome variable based on student score to advise the teacher using an "ifelse" statement
+```{r}
+D1$advice <- ifelse(D1$score <=0.4, "intervene", ifelse(D1$score > 0.4 & D1$score <=0.8, "monitor", "no action"))
+```
+
+#Build a decision tree that predicts "advice" based on how many problems students have answered before, the percentage of those problems they got correct and how many hints they required
+```{r}
+score_ctree <- ctree(factor(advice) ~ prior_prob_count + prior_percent_correct + hints, D1)
+```
+
+#Plot tree
+```{r}
+plot(score_ctree)
+```
+
+
+Please interpret the tree, which two behaviors do you think the teacher should most closely pay attemtion to?
+
+Teacher should intervene: students at risk
+
+#Test Tree
+Upload the data "intelligent_tutor_new.csv". This is a data set of a differnt sample of students doing the same problems in the same system. We can use the tree we built for the previous data set to try to predict the "advice" we should give the teacher about these new students. 
+
+```{r}
+#Upload new data
+
+D2 <- read.csv("intelligent_tutor_new.csv")
+
+#Generate predicted advice for new students based on tree generated from old students
+
+D2$prediction <- predict(score_ctree, D2)
+
+``` 
+
+## Part III
+Compare the predicted advice with the actual advice that these studnts recieved. What is the difference between the observed and predicted results?
+
+##Difference between a classification tree and a regression tree -- A classification tree predicts categories, a regression tree predicts a continuous variable.
+
+D1: training dataset
+D2: testing dataset
+same variable 
+
+
+score > 0.8 --> no action
+create a column advice.actual--> no action
+compare two columns: errorcount/length * 100
+sum(as.integer(D2$ != D2$)) #boolean
+
+```{r}
+D2$score <- as.numeric(as.character(D2$score))
+D2$actual <- ifelse(D2$score <=0.4, "intervene", ifelse(D2$score > 0.4 & D2$score <=0.8, "monitor", "no action"))
+
+prediction_percentage <- sum(as.integer(D2$prediction != D2$actual))/length(D2$prediction)*100
+
+paste("the prediction rate is", prediction_percentage, "%")
+```
+
