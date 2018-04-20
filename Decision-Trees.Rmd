@@ -19,7 +19,7 @@ library(party)
 D1 <- read.table("intelligent_tutor.csv", sep = ",", header = TRUE)
 ```
 
-##Classification Tree
+## Classification Tree
 First we will build a classification tree to predict which students ask a teacher for help, which start a new session, or which give up, based on whether or not the student completed a session (D1$complete) and whether or not they asked for hints (D1$hint.y).
 
 ```{r}
@@ -28,19 +28,19 @@ c.tree <- rpart(action ~ hint.y + complete, method="class", data=D1)
 
 Notice the standard R notion for a formula X ~ Y
 
-#Look at the error of this tree
+### Look at the error of this tree
 
 ```{r}
 printcp(c.tree)
 ```
 
-#Plot the tree
+### Plot the tree
 
 ```{r}
 post(c.tree, file = "tree.ps", title = "Session Completion Action: 1 - Ask teacher, 2 - Start new session, 3 - Give up")
 ```
 
-#Regression Tree
+# Regression Tree
 
 We want to see if we can build a decision tree to help teachers decide which students to follow up with, based on students' performance in Assistments. We will create three groups ("teacher should intervene", "teacher should monitor student progress" and "no action") based on students' previous use of the system and how many hints they use. To do this we will be building a decision tree using the "party" package. The party package builds decision trees based on a set of statistical stopping rules.
 
