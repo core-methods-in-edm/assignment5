@@ -3,6 +3,8 @@ title: "Assignment 5 - Decision Trees"
 author: "Charles Lang"
 date: "November 9, 2016"
 output: html_document
+programmer: "Li Li"
+last modified: Nov 15
 ---
 For this assignment we will be using data from the Assistments Intelligent Tutoring system. This system gives students hints based on how they perform on math problems. 
 
@@ -16,7 +18,7 @@ library(party)
 
 ## Part I
 ```{r}
-D1 <- 
+D1 <- read.csv("intelligent_tutor.csv", header=TRUE)
 ```
 
 ##Classification Tree
@@ -26,10 +28,14 @@ First we will build a classification tree to predict which students ask a teache
 c.tree <- rpart(action ~ hint.y + complete, method="class", data=D1) #Notice the standard R notion for a formula X ~ Y
 
 #Look at the error of this tree
+#Explanation of cp from web: The complexity parameter (cp) is used to control the size of the decision tree and to select the optimal tree size. If the cost of adding another variable to the decision tree from the current node is above the value of cp, then tree building does not continue. We could also say that tree construction does not continue unless it would decrease the overall lack of fit by a factor of cp.
+#Root Node Error: is the cross-validated error rate, which is a more objective measure of predictive accuracy. cross-validation-ability of generalization: how well the model will perform on the other unseen data
 printcp(c.tree)
+plotcp(c.tree)
 
 #Plot the tree
 post(c.tree, file = "tree.ps", title = "Session Completion Action: 1 - Ask teacher, 2 - Start new session, 3 - Give up")
+#we can also install rpart.plot package to make nicer plot
 
 ```
 ## Part II
@@ -59,6 +65,9 @@ plot(score_ctree)
 ```
 
 Please interpret the tree, which two behaviors do you think the teacher should most closely pay attemtion to?
+Answer: 
+Those who ask for no more than 12 hints but got no more than 0.629 percentage prior questions correct, and 
+Those who ask for more than 12 hints
 
 #Test Tree
 Upload the data "intelligent_tutor_new.csv". This is a data set of a differnt sample of students doing the same problems in the same system. We can use the tree we built for the previous data set to try to predict the "advice" we should give the teacher about these new students. 
@@ -66,7 +75,7 @@ Upload the data "intelligent_tutor_new.csv". This is a data set of a differnt sa
 ```{r}
 #Upload new data
 
-D2 <- 
+D2 <- read.csv("intelligent_tutor_new.csv",header=TRUE)
 
 #Generate predicted advice for new students based on tree generated from old students
 
@@ -74,4 +83,9 @@ D2$prediction <- predict(score_ctree, D2)
 
 ``` 
 ## Part III
-Compare the predicted advice with the actual advice that these studnts recieved. What is the difference between the observed and predicted results?
+Compare the predicted advice with the actual advice that these students recieved. What is the difference between the observed and predicted results?
+```{r}
+D2$advice <- ifelse(D2$score <=0.4, "intervene", ifelse(D2$score > 0.4 & D2$score <=0.8, "monitor", "no action"))
+
+#Answer: Since the students' scores are all 1, the actual advice they received are all "no action", while the predicted advice for some are "monitor".
+```
