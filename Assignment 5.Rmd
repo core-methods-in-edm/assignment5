@@ -16,7 +16,8 @@ library(party)
 
 ## Part I
 ```{r}
-D1 <- 
+library(readr)
+D1 <- read_csv('intelligent_tutor.csv')
 ```
 
 ##Classification Tree
