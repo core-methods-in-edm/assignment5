@@ -8,7 +8,8 @@ For this assignment we will be using data from the Assistments Intelligent Tutor
 
 #Install & call libraries
 ```{r}
-install.packages("party", "rpart")
+install.packages("party")
+install.packages("rpart")
 
 library(rpart)
 library(party)
@@ -16,7 +17,7 @@ library(party)
 
 ## Part I
 ```{r}
-D1 <- 
+D1 <- read.csv("intelligent_tutor.csv", header = TRUE)
 ```
 
 ##Classification Tree
@@ -56,9 +57,12 @@ score_ctree <- ctree(factor(advice) ~ prior_prob_count + prior_percent_correct +
 #Plot tree
 ```{r}
 plot(score_ctree)
+
 ```
 
-Please interpret the tree, which two behaviors do you think the teacher should most closely pay attemtion to?
+Please interpret the tree, which two behaviors do you think the teacher should most closely pay attention to?
+
+#I think the teacher shoould pay attention to whether the student has answered more than 85 questions before and whether the student has used more than 12 hints, since these two features lead to clearer action suggestions. 
 
 #Test Tree
 Upload the data "intelligent_tutor_new.csv". This is a data set of a differnt sample of students doing the same problems in the same system. We can use the tree we built for the previous data set to try to predict the "advice" we should give the teacher about these new students. 
@@ -66,7 +70,7 @@ Upload the data "intelligent_tutor_new.csv". This is a data set of a differnt sa
 ```{r}
 #Upload new data
 
-D2 <- 
+D2 <- read.csv("intelligent_tutor_new.csv", header = TRUE)
 
 #Generate predicted advice for new students based on tree generated from old students
 
@@ -75,3 +79,16 @@ D2$prediction <- predict(score_ctree, D2)
 ``` 
 ## Part III
 Compare the predicted advice with the actual advice that these students recieved. What is the difference between the observed and predicted results?
+
+```{r}
+
+D1$prediction <- predict(score_ctree, D1)
+
+D1$action <- ifelse(D1$action ==1, "intervene", ifelse(D1$action ==2, "monitor", "no action"))
+
+sum(D1$action==D1$advice)/378
+sum(D1$prediction==D1$action)/378
+sum(D1$prediction==D1$advice)/378
+# The similartity between actual advice and predicted advice is 54.5%.  
+
+```
