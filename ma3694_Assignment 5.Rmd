@@ -1,0 +1,88 @@
+---
+title: "Assignment 5 - Decision Trees"
+author: "Charles Lang"
+date: "November 9, 2016"
+output: html_document
+---
+For this assignment we will be using data from the Assistments Intelligent Tutoring system. This system gives students hints based on how they perform on math problems. 
+
+#Install & call libraries
+```{r}
+#install.packages("party", "rpart")
+install.packages("party")
+
+library(rpart)
+library(party)
+```
+
+## Part I
+```{r}
+D1 <- read.csv("intelligent_tutor.csv", header = TRUE, sep = ",")
+```
+
+##Classification Tree
+First we will build a classification tree to predict which students ask a teacher for help, which start a new session, or which give up, based on whether or not the student completed a session (D1$complete) and whether or not they asked for hints (D1$hint.y). 
+```{r}
+
+c.tree <- rpart(action ~ hint.y + complete, method="class", data=D1) #Notice the standard R notion for a formula X ~ Y
+
+#Look at the error of this tree
+printcp(c.tree)
+
+#Plot the tree
+post(c.tree, file = "tree.ps", title = "Session Completion Action: 1 - Ask teacher, 2 - Start new session, 3 - Give up")
+
+```
+## Part II
+
+#Regression Tree
+
+We want to see if we can build a decision tree to help teachers decide which students to follow up with, based on students' performance in Assistments. We will create three groups ("teacher should intervene", "teacher should monitor student progress" and "no action") based on students' previous use of the system and how many hints they use. To do this we will be building a decision tree using the "party" package. The party package builds decision trees based on a set of statistical stopping rules.
+
+#Take a look at our outcome variable "score"
+```{r}
+hist(D1$score)
+```
+
+#Create a categorical outcome variable based on student score to advise the teacher using an "ifelse" statement
+```{r}
+D1$advice <- ifelse(D1$score <=0.4, "intervene", ifelse(D1$score > 0.4 & D1$score <=0.8, "monitor", "no action"))
+```
+
+#Build a decision tree that predicts "advice" based on how many problems students have answered before, the percentage of those problems they got correct and how many hints they required
+```{r}
+score_ctree <- ctree(factor(advice) ~ prior_prob_count + prior_percent_correct + hints, D1)
+```
+
+#Plot tree
+```{r}
+plot(score_ctree)
+```
+
+Please interpret the tree, which two behaviors do you think the teacher should most closely pay attemtion to?
+
+**Teacher should most closely pay attention to students that are asking more than 12 question hints, and students that are requesting  0-12 question hints and in previous sessions had less than 63% of corrected answers.**
+
+#Test Tree
+Upload the data "intelligent_tutor_new.csv". This is a data set of a differnt sample of students doing the same problems in the same system. We can use the tree we built for the previous data set to try to predict the "advice" we should give the teacher about these new students. 
+
+```{r}
+#Upload new data
+
+D2 <- read.csv("intelligent_tutor_new.csv", header = TRUE, sep = ",") #In this dataset all students obtained 100% of all corrected answers.
+
+#Generate predicted advice for new students based on tree generated from old students
+
+D2$prediction <- predict(score_ctree, D2) #If model were perfect all prediction would be "no action".
+
+``` 
+## Part III
+Compare the predicted advice with the actual advice that these students recieved. What is the difference between the observed and predicted results?
+
+```{r}
+
+#counting number of no action
+table(D2$prediction) #116 of cases were predicted as "no action", divided by the number of observations, the percentage of correct prediction is 58%
+```
+
+**Since all students obtained a score greater than 0.8, observed results should be "no action" for all observations. However, in 58% of observations, the model generated a good prediction, i.e. predicted results were "no action". Hence, the accuracy of model is 58%.**
