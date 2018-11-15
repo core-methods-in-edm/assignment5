@@ -8,22 +8,26 @@ For this assignment we will be using data from the Assistments Intelligent Tutor
 
 #Install & call libraries
 ```{r}
-install.packages("party", "rpart")
+install.packages("rpart")
+install.packages("party")
 
 library(rpart)
 library(party)
+
 ```
 
 ## Part I
 ```{r}
-D1 <- 
+D1 <- read.csv("intelligent_tutor.csv", header = TRUE)
 ```
 
 ##Classification Tree
-First we will build a classification tree to predict which students ask a teacher for help, which start a new session, or which give up, based on whether or not the student completed a session (D1$complete) and whether or not they asked for hints (D1$hint.y). 
+First we will build a classification tree to predict which students ask a teacher for help, which start a new session, or which give up, based on whether or not the student completed a session (D1$complete) and whether or not they asked for hints (D1$hint.y)
+. 
 ```{r}
 
-c.tree <- rpart(action ~ hint.y + complete, method="class", data=D1) #Notice the standard R notion for a formula X ~ Y
+c.tree <- rpart(action ~ hint.y + complete, method="class", data=D1) 
+#Notice the standard R notion for a formula X ~ Y
 
 #Look at the error of this tree
 printcp(c.tree)
@@ -66,7 +70,7 @@ Upload the data "intelligent_tutor_new.csv". This is a data set of a differnt sa
 ```{r}
 #Upload new data
 
-D2 <- 
+D2 <- read.csv("intelligent_tutor_new.csv", header = TRUE)
 
 #Generate predicted advice for new students based on tree generated from old students
 
@@ -75,3 +79,9 @@ D2$prediction <- predict(score_ctree, D2)
 ``` 
 ## Part III
 Compare the predicted advice with the actual advice that these studnts recieved. What is the difference between the observed and predicted results?
+I think it is a good model because there is 0 intervention and more than half of the learners have no action.
+```{r}
+table(D2$prediction)
+```
+
+
