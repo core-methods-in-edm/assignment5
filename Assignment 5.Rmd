@@ -16,7 +16,7 @@ library(party)
 
 ## Part I
 ```{r}
-D1 <- 
+D1 <- read.csv('intelligent_tutor.csv')
 ```
 
 ##Classification Tree
@@ -29,8 +29,9 @@ c.tree <- rpart(action ~ hint.y + complete, method="class", data=D1) #Notice the
 printcp(c.tree)
 
 #Plot the tree
+plot(c.tree)
+text(c.tree, use.n = TRUE, all = TRUE, cex = 0.8)
 post(c.tree, file = "tree.ps", title = "Session Completion Action: 1 - Ask teacher, 2 - Start new session, 3 - Give up")
-
 ```
 ## Part II
 
@@ -66,7 +67,7 @@ Upload the data "intelligent_tutor_new.csv". This is a data set of a differnt sa
 ```{r}
 #Upload new data
 
-D2 <- 
+D2 <- read.csv('intelligent_tutor_new.csv')
 
 #Generate predicted advice for new students based on tree generated from old students
 
