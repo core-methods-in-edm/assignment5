@@ -16,7 +16,7 @@ library(party)
 
 ## Part I
 ```{r}
-D1 <- 
+D1 <- read.csv("intelligent_tutor.csv")
 ```
 
 ##Classification Tree
@@ -30,6 +30,7 @@ printcp(c.tree)
 
 #Plot the tree
 post(c.tree, file = "tree.ps", title = "Session Completion Action: 1 - Ask teacher, 2 - Start new session, 3 - Give up")
+
 
 ```
 ## Part II
@@ -60,13 +61,15 @@ plot(score_ctree)
 
 Please interpret the tree, which two behaviors do you think the teacher should most closely pay attemtion to?
 
+If a student has looked at more than 12 hints then the teacher should intervene with the student because they will most likely fall in the "intervene" or "monitor" group. The other group that the teacher should pay attention to is the group who has looked at between 1 and 12 hints but has achieved below 62.9% on the "prior_percent_correct" variable. Most of these students fall in the "monitor" group or the "intervene" group.
+
 #Test Tree
 Upload the data "intelligent_tutor_new.csv". This is a data set of a differnt sample of students doing the same problems in the same system. We can use the tree we built for the previous data set to try to predict the "advice" we should give the teacher about these new students. 
 
 ```{r}
 #Upload new data
 
-D2 <- 
+D2 <- read.csv("intelligent_tutor_new.csv")
 
 #Generate predicted advice for new students based on tree generated from old students
 
@@ -75,3 +78,10 @@ D2$prediction <- predict(score_ctree, D2)
 ``` 
 ## Part III
 Compare the predicted advice with the actual advice that these students recieved. What is the difference between the observed and predicted results?
+
+```{r}
+#to find the number of monitor 
+table(D2$prediction)
+
+```
+#The predictive model seems to be pretty good. Of these students who scored a 1 on the test, 116 were predicted to be in the "no action" group, 84 were in the "monitor" group, and none were in the "intervene" group. Since the model accurately predicted these high scoring students to be mostly in the "no action" group I would say it is a successful model. Having some students from the "monitor" group is ok.
