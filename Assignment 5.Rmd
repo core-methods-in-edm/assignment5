@@ -15,20 +15,32 @@ library(party)
 ```
 
 ## Part I
+
+Code Book
+
+id - student id prior_prob_count - The number of problems a student has done in the system prior to the surrent session
+score - The score the student achieved in the current session
+hints - The number of hints the student requested in the current session
+hint.y - Whether or not the student asked for hints in the current session
+complete - Whether or not the student completed the current session
+action - The action suggested by the system to a teacher about a given student based on their performance
+
 ```{r}
-D1 <- 
+D1 <- read.csv("intelligent_tutor.csv")
 ```
 
 ##Classification Tree
 First we will build a classification tree to predict which students ask a teacher for help, which start a new session, or which give up, based on whether or not the student completed a session (D1$complete) and whether or not they asked for hints (D1$hint.y). 
 ```{r}
-
-c.tree <- rpart(action ~ hint.y + complete, method="class", data=D1) #Notice the standard R notion for a formula X ~ Y
+?rpart
+c.tree <- rpart(action ~ hint.y + complete, method="class", data=D1) 
+#Notice the standard R notion for a formula X ~ Y
 
 #Look at the error of this tree
 printcp(c.tree)
 
 #Plot the tree
+#?
 post(c.tree, file = "tree.ps", title = "Session Completion Action: 1 - Ask teacher, 2 - Start new session, 3 - Give up")
 
 ```
@@ -60,18 +72,34 @@ plot(score_ctree)
 
 Please interpret the tree, which two behaviors do you think the teacher should most closely pay attemtion to?
 
+Teachers should pay attention to hint and prior_prob_count. Students who has asked for hints are generally more likely to 
+
 #Test Tree
 Upload the data "intelligent_tutor_new.csv". This is a data set of a differnt sample of students doing the same problems in the same system. We can use the tree we built for the previous data set to try to predict the "advice" we should give the teacher about these new students. 
 
 ```{r}
 #Upload new data
 
-D2 <- 
+D2 <- read.csv("intelligent_tutor_new.csv")
 
 #Generate predicted advice for new students based on tree generated from old students
 
 D2$prediction <- predict(score_ctree, D2)
-
 ``` 
 ## Part III
 Compare the predicted advice with the actual advice that these students recieved. What is the difference between the observed and predicted results?
+```{r}
+D1$advice <- as.factor(D1$advice)
+table(D1$score)
+D2$advice <- ifelse(D2$score <=0.4, "intervene", ifelse(D2$score > 0.4 & D2$score <=0.8, "monitor", "no action"))
+plot(D1$advice)
+plot(D2$prediction)
+
+# calculate the accuracy 
+D2$correct <- ifelse(D2$prediction == D2$advice, 1, 0)
+tab <- table(D2$correct)
+acc <- tab[2] / (tab[1] + tab[2]) 
+acc <- as.numeric(acc)
+acc
+```
+
