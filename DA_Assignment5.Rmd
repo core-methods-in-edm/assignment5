@@ -1,0 +1,72 @@
+---
+title: "DA_A5_11_15_2018"
+author: "DA"
+date: "November 15, 2018"
+output: html_document
+---
+```{r}
+install.packages("party", "rpart")
+library(rpart)
+library(party)
+#part1
+D1 <- read.csv("intelligent_tutor.csv", header = TRUE)
+
+```
+##Classification Tree
+First we will build a classification tree to predict which students ask a teacher for help, which start a new session, or which give up, based on whether or not the student completed a session (D1$complete) and whether or not they asked for hints (D1$hint.y). 
+```{r}
+c.tree <- rpart(action ~ hint.y + complete, method="class", data=D1)
+#Notice the standard R notion for a formula X ~ Y
+```
+```{r}
+#Look at the error of this tree
+printcp(c.tree)
+
+#Plot the tree
+post(c.tree, file = "tree.ps", title = "Session Completion Action: 1 - Ask teacher, 2 - Start new session, 3 - Give up")
+```
+
+```{r}
+#Part II
+#Regression tree
+hist(D1$score)
+```
+
+#Create a categorical outcome variable based on student score to advise the teacher using an "ifelse" statement
+```{r}
+D1$advice <- ifelse(D1$score <=0.4, "intervene", ifelse(D1$score > 0.4 & D1$score <=0.8, "monitor", "no action"))
+```
+#Build a decision tree that predicts "advice" based on how many problems students have answered before, the percentage of those problems they got correct and how many hints they required
+```{r}
+score_ctree <- ctree(factor(advice) ~ prior_prob_count + prior_percent_correct + hints, D1)
+```
+#Plot tree
+```{r}
+plot(score_ctree)
+#Interpretation of the tree: Please interpret the tree, which two behaviors do you think the teacher should most closely pay attemtion to?
+#Answer: Students who attempted over 85 percent problems did not require the hints and required the least amount of intervention. 
+#The two problems that teachers should pay close attention to are a) students who ask for less hints (less than equal to 12) but still perform poorly and b) students who ask for higher number of hints (greater than 12) but still perform poorly. For instance, in node 7, the students who asked for help for at least 12 times, answered correctly only 63 percent. on the other hand, on node 9, the students who asked for more than 12 hints received the most intervetnion from the teachers (40 percent).
+
+#Test Tree
+#Upload the data "intelligent_tutor_new.csv". This is a data set of a differnt sample of students doing the same problems in the same system. We can use the tree we built for the previous data set to try to predict the "advice" we should give the teacher about these new students. 
+
+``{r}
+#Upload new data
+D2 <- read.csv("intelligent_tutor_new.csv", header = TRUE)
+#Generate predicted advice for new students based on tree generated from old students
+D2$prediction <- predict(score_ctree, D2)
+
+``` 
+## Part III
+Compare the predicted advice with the actual advice that these students recieved. What is the difference between the observed and predicted results?
+#second date set is filtered down to correct score only. So we have to come up with a way to fiure out which of the three (no action, monitor, hints) best explain the correct score. 
+```{r}
+table(D2$prediction)
+#from the table, the correct percent for monitor = 84/200 = .24 = 42% and for "no action" = 116/200 = .58 = 58%
+#In the second model for the predicted, the "no action" predicted correct score by 58 percent and "monitor" predicted correct score by 43 percent. 
+#In the second model, since al the students scored above .80 (that is 1), the observed should be "no action" for all students. That is 100 percent should have been predicted by no action rather than 58 percent. 
+
+```
+
+```
+
