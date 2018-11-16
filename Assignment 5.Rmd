@@ -72,7 +72,7 @@ plot(score_ctree)
 
 Please interpret the tree, which two behaviors do you think the teacher should most closely pay attemtion to?
 
-Teachers should pay attention to hint and prior_prob_count. Students who has asked for hints are generally more likely to 
+Teachers should pay attention to hint and prior_prob_count. Students who asked for hints are generally more likely to have lower scores compared to those who didn't.  Same as prior_prob_count. 
 
 #Test Tree
 Upload the data "intelligent_tutor_new.csv". This is a data set of a differnt sample of students doing the same problems in the same system. We can use the tree we built for the previous data set to try to predict the "advice" we should give the teacher about these new students. 
