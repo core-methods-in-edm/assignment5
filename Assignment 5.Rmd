@@ -16,7 +16,7 @@ library(party)
 
 ## Part I
 ```{r}
-D1 <- 
+D1 <- read.csv("intelligent_tutor.csv")
 ```
 
 ##Classification Tree
@@ -60,13 +60,15 @@ plot(score_ctree)
 
 Please interpret the tree, which two behaviors do you think the teacher should most closely pay attemtion to?
 
+I think the classifying of the model is not quite efficient, because the students in each node is not "pure", consisted of individuals from different advice groups. However, node 7&9 have high proportion of students need intervention or monitor. So, teachers should pay special attention to students who ask for many hint(hint>12), or whose correct rate is low(<0.629).
+
 #Test Tree
 Upload the data "intelligent_tutor_new.csv". This is a data set of a differnt sample of students doing the same problems in the same system. We can use the tree we built for the previous data set to try to predict the "advice" we should give the teacher about these new students. 
 
 ```{r}
 #Upload new data
 
-D2 <- 
+D2 <- read.csv("intelligent_tutor_new.csv")
 
 #Generate predicted advice for new students based on tree generated from old students
 
@@ -75,3 +77,17 @@ D2$prediction <- predict(score_ctree, D2)
 ``` 
 ## Part III
 Compare the predicted advice with the actual advice that these students recieved. What is the difference between the observed and predicted results?
+
+There is only 58% accuracy rate of the tree model. I think the accuracy rate is a bit low, probably due to the model itself could not classify the training sample efficiently as mentioned previously. Moreover, all the score in testing sample equal to 1. Maybe the sampling method of the testing group is not random. 
+
+```{r}
+D2$advice <- ifelse(D2$score <=0.4, "intervene", ifelse(D2$score > 0.4 & D2$score <=0.8, "monitor", "no action"))
+D2$match<- ifelse(D2$prediction == D2$advice, 1, 0)
+#calculate the prediction accuracy
+sum(D2$match)/nrow(D2)
+
+#another way is plot to visualize the accuracy of the prediciton.
+plot(D2$prediction~D2$score)
+
+```
+
