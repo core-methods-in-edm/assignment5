@@ -16,7 +16,7 @@ library(party)
 
 ## Part I
 ```{r}
-D1 <- 
+D1 <- read.csv("intelligent_tutor.csv")
 ```
 
 ##Classification Tree
@@ -28,8 +28,12 @@ c.tree <- rpart(action ~ hint.y + complete, method="class", data=D1) #Notice the
 #Look at the error of this tree
 printcp(c.tree)
 
+plot(printcp(c.tree))
+
 #Plot the tree
 post(c.tree, file = "tree.ps", title = "Session Completion Action: 1 - Ask teacher, 2 - Start new session, 3 - Give up")
+
+#according to the graph, these two factors hint.y and complete are not much correlated with action
 
 ```
 ## Part II
@@ -59,6 +63,7 @@ plot(score_ctree)
 ```
 
 Please interpret the tree, which two behaviors do you think the teacher should most closely pay attemtion to?
+//we choose node 7 and 9; namely behavior 1 0<hints<12 & prior_percent_correct <=0.62; behavior 2 hints>12
 
 #Test Tree
 Upload the data "intelligent_tutor_new.csv". This is a data set of a differnt sample of students doing the same problems in the same system. We can use the tree we built for the previous data set to try to predict the "advice" we should give the teacher about these new students. 
@@ -66,7 +71,7 @@ Upload the data "intelligent_tutor_new.csv". This is a data set of a differnt sa
 ```{r}
 #Upload new data
 
-D2 <- 
+D2 <- read.csv("intelligent_tutor_new.csv")
 
 #Generate predicted advice for new students based on tree generated from old students
 
@@ -75,3 +80,12 @@ D2$prediction <- predict(score_ctree, D2)
 ``` 
 ## Part III
 Compare the predicted advice with the actual advice that these students recieved. What is the difference between the observed and predicted results?
+
+```{r}
+library(dplyr)
+correct_prediction<-count(D2,prediction)
+correct_percent<-correct_prediction$n/sum(correct_prediction$n)
+
+#the correct percent is 58%
+```
+
