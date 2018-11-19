@@ -16,7 +16,7 @@ library(party)
 
 ## Part I
 ```{r}
-D1 <- 
+D1 <- read.csv("intelligent_tutor.csv",header=T)
 ```
 
 ##Classification Tree
@@ -59,6 +59,9 @@ plot(score_ctree)
 ```
 
 Please interpret the tree, which two behaviors do you think the teacher should most closely pay attemtion to?
+```{r}
+#teachers should pay attention to students who need hints more than 12 and those whose correct percent lower than 0.629
+```
 
 #Test Tree
 Upload the data "intelligent_tutor_new.csv". This is a data set of a differnt sample of students doing the same problems in the same system. We can use the tree we built for the previous data set to try to predict the "advice" we should give the teacher about these new students. 
@@ -66,7 +69,7 @@ Upload the data "intelligent_tutor_new.csv". This is a data set of a differnt sa
 ```{r}
 #Upload new data
 
-D2 <- 
+D2 <- read.csv("intelligent_tutor_new.csv",header=T)
 
 #Generate predicted advice for new students based on tree generated from old students
 
@@ -75,3 +78,14 @@ D2$prediction <- predict(score_ctree, D2)
 ``` 
 ## Part III
 Compare the predicted advice with the actual advice that these students recieved. What is the difference between the observed and predicted results?
+```{r}
+D2$advice <- ifelse(D2$score <=0.4, "intervene", ifelse(D2$score > 0.4 & D2$score <=0.8, "monitor", "no action"))
+#find out under how many cases that advice dismatch with the preditiction
+D2$dismatch <- ifelse(D2$prediction != D2$advice, 1, 0)
+#count the number of dismatch
+n=sum(D2$dismatch)
+#compute the error rate
+errorrate=n/200
+errorrate
+```
+
