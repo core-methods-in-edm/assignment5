@@ -10,19 +10,21 @@ For this assignment we will be using data from the Assistments Intelligent Tutor
 ```{r}
 install.packages("party", "rpart")
 
+```
+```{r}
 library(rpart)
 library(party)
 ```
 
 ## Part I
 ```{r}
-D1 <- 
+D1 <- read.csv("intelligent_tutor.csv")
 ```
 
 ##Classification Tree
 First we will build a classification tree to predict which students ask a teacher for help, which start a new session, or which give up, based on whether or not the student completed a session (D1$complete) and whether or not they asked for hints (D1$hint.y). 
 ```{r}
-
+library(rpart)
 c.tree <- rpart(action ~ hint.y + complete, method="class", data=D1) #Notice the standard R notion for a formula X ~ Y
 
 #Look at the error of this tree
@@ -50,6 +52,7 @@ D1$advice <- ifelse(D1$score <=0.4, "intervene", ifelse(D1$score > 0.4 & D1$scor
 
 #Build a decision tree that predicts "advice" based on how many problems students have answered before, the percentage of those problems they got correct and how many hints they required
 ```{r}
+
 score_ctree <- ctree(factor(advice) ~ prior_prob_count + prior_percent_correct + hints, D1)
 ```
 
@@ -60,18 +63,27 @@ plot(score_ctree)
 
 Please interpret the tree, which two behaviors do you think the teacher should most closely pay attemtion to?
 
+
 #Test Tree
 Upload the data "intelligent_tutor_new.csv". This is a data set of a differnt sample of students doing the same problems in the same system. We can use the tree we built for the previous data set to try to predict the "advice" we should give the teacher about these new students. 
 
 ```{r}
 #Upload new data
 
-D2 <- 
+D2 <- read.csv("intelligent_tutor_new.csv")
 
 #Generate predicted advice for new students based on tree generated from old students
 
 D2$prediction <- predict(score_ctree, D2)
 
+
 ``` 
 ## Part III
 Compare the predicted advice with the actual advice that these students recieved. What is the difference between the observed and predicted results?
+
+```{r}
+
+
+
+```
+
