@@ -2,6 +2,7 @@
 title: "Assignment 5 - Decision Trees"
 author: "Meijuan Zeng"
 output: html_document
+date: 11/20/2018
 ---
 For this assignment we will be using data from the Assistments Intelligent Tutoring system. This system gives students hints based on how they perform on math problems. 
 
@@ -65,7 +66,7 @@ plot(score_ctree)
 
 Please interpret the tree, which two behaviors do you think the teacher should most closely pay attemtion to?
 
-#The types of advice given by teachers depends on how many problems students have answered before, the percentage of those problems they got correct and how many hints they required. For students who require no hints, there are 145 students who answered less than 85 questions and 76 who answered more than 85 questions. For students who require hints, there are 46 who require more than 12 hints; 45 who require less than 12 hints and score higher than 0.629 and 66 who require less than 12 hints but score lower than 0.629. Teacher should pay most closely attention to students who require more than 12 hints, and less than 12 hints but score lower than 0.629. 
+#Teacher should pay most closely attention to students who require more than 12 hints, and less than 12 hints but score lower than 0.629. 
 
 #Test Tree
 Upload the data "intelligent_tutor_new.csv". This is a data set of a differnt sample of students doing the same problems in the same system. We can use the tree we built for the previous data set to try to predict the "advice" we should give the teacher about these new students. 
@@ -82,9 +83,12 @@ D2$prediction <- predict(score_ctree, D2)
 Compare the predicted advice with the actual advice that these students recieved. What is the difference between the observed and predicted results?
 
 ```{r}
-D2$actual <- ifelse(D2$prediction == "no action", 1, 0)
-sum(D2$actual)
-#difference: 200 - 116 = 84
-#accuracy: 116 / 200 = 0.58
+D2$actual <-  ifelse(D2$score <=0.4, "intervene", ifelse(D2$score > 0.4 & D2$score <=0.8, "monitor", "no action"))
+D2$match <- ifelse(D2$prediction == D2$actual, 1, 0)
+#Number of prediction which matches the actual results
+sum(D2$match)
+#accuracy is:
+accuracy = sum(D2$match) / 200
+accuracy
 ```
 
