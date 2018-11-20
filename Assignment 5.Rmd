@@ -8,15 +8,41 @@ For this assignment we will be using data from the Assistments Intelligent Tutor
 
 #Install & call libraries
 ```{r}
-install.packages("party", "rpart")
+
+# install.packages("party", "rpart")
+#library("party", lib.loc="/Library/Frameworks/R.framework/Versions/3.3/Resources/library")
+
+#FOR SOME REASON, MY PARTY PACKAGE WOULD NOT LOAD, SO I LOADED THESE PACKAGES FIRST
+#SUGGESTIONS FROM HERE: https://stackoverflow.com/questions/24687280/error-installing-party-package-in-r
+
+
+# I RESOLVED MY ISSUE BY POSTING TO STACK OVERFLOW HERE: https://stackoverflow.com/questions/53385377/party-package-installation-failure-and-error-messages?noredirect=1#comment93649496_53385377
+
+install.packages("mvtnorm")
+library(mvtnorm)
+install.packages("multcomp")
+library(multcomp)
+install.packages("party")
+library("party")
+# I did NOT "install from sources the package which needs compilation", which allowed PARTY to finally install!
+
 
 library(rpart)
-library(party)
+library("dplyr", lib.loc="/Library/Frameworks/R.framework/Versions/3.3/Resources/library")
+library("ggplot2", lib.loc="/Library/Frameworks/R.framework/Versions/3.3/Resources/library")
+library("igraph", lib.loc="/Library/Frameworks/R.framework/Versions/3.3/Resources/library")
+library("RColorBrewer", lib.loc="/Library/Frameworks/R.framework/Versions/3.3/Resources/library")
+library("tidyr", lib.loc="/Library/Frameworks/R.framework/Versions/3.3/Resources/library")
+library("tidyselect", lib.loc="/Library/Frameworks/R.framework/Versions/3.3/Resources/library")
+library(factoextra)
+
+install.packages("partykit")
+library("partykit")
 ```
 
 ## Part I
 ```{r}
-D1 <- 
+D1 <- as.data.frame(read.csv("intelligent_tutor.csv"))
 ```
 
 ##Classification Tree
@@ -29,8 +55,9 @@ c.tree <- rpart(action ~ hint.y + complete, method="class", data=D1) #Notice the
 printcp(c.tree)
 
 #Plot the tree
-post(c.tree, file = "tree.ps", title = "Session Completion Action: 1 - Ask teacher, 2 - Start new session, 3 - Give up")
+post(c.tree, title = "Session Completion Action: 1 - Ask teacher, 2 - Start new session, 3 - Give up", filename = "tree.ps")
 
+# I DON'T KNOW WHAT I AM SUPPOSED TO BE ABLE TO SEE; NOTHING IS APPEARING
 ```
 ## Part II
 
@@ -58,7 +85,16 @@ score_ctree <- ctree(factor(advice) ~ prior_prob_count + prior_percent_correct +
 plot(score_ctree)
 ```
 
-Please interpret the tree, which two behaviors do you think the teacher should most closely pay attemtion to?
+Please interpret the tree, which two behaviors do you think the teacher should most closely pay attemtion to
+
+#### <!-- IN GENERAL, THE TEACHER SHOULD PAY ATTENTION TO STUDENTS WHO NEEDED A LOT OF HINTS (>12), YET STILL HAD A LOW "PERCENT CORRECT" SCORE -->
+####  <!-- THE TEACHER SHOULD ALSO WATCH STUDENTS WHO DID NOT USE A LOT OF HINTS, YET HAD A LOW "PRIOR PROBLEM" COUNT -->
+
+  <!-- I DO NOT FEEL COMPLETELY CONFIDENT ABOUT HOW I AM INTERPRETING THE GRAPH BELOW. IS THE DARK BAR INTERVENING? -->
+  <!-- I ALSO DO NOT KNOW WHY THE RIGHT-MOST LINE IS NOT CONNECTED TO ANYTHING...IS THIS AN ERROR? IF SOMEONE NEEDED SO MANY HINTS,       
+  SHOULDN'T THAT BE A FLAG? -->
+
+  <!-- AM I INTERPRETING THIS CORRECTLY? I AM MOST CONFUSED ABOUT THE BLANK FOR "DO NOTHING" WHEN SOMEONE NEEDS SO MANY HINTS, AND ALSO WHY NODE 8 LOOKS SO DIFFERENT THAN THE REST OF THE BAR GRAPHS. I ALSO DON'T UNDERSTAND THE "P=" IN EACH NODE. IS THIS A PROBABILITY, OR A P-VALUE? AND WHAT DOES THIS MEAN FOR THE DATA-SET SPECIFICALLY? -->
 
 #Test Tree
 Upload the data "intelligent_tutor_new.csv". This is a data set of a differnt sample of students doing the same problems in the same system. We can use the tree we built for the previous data set to try to predict the "advice" we should give the teacher about these new students. 
@@ -66,7 +102,7 @@ Upload the data "intelligent_tutor_new.csv". This is a data set of a differnt sa
 ```{r}
 #Upload new data
 
-D2 <- 
+D2 <- as.data.frame(read.csv("intelligent_tutor_new.csv"))
 
 #Generate predicted advice for new students based on tree generated from old students
 
@@ -75,3 +111,7 @@ D2$prediction <- predict(score_ctree, D2)
 ``` 
 ## Part III
 Compare the predicted advice with the actual advice that these students recieved. What is the difference between the observed and predicted results?
+
+###HOW CAN I COMPARE, WHEN THERE ARE NO ID VARIABLES IN THE 2ND DATASET?
+###THE MOST OBVIOUS DIFFERENCE AT FIRST GLANCE, IS THAT THERE IS NO "INTERVENE" FOR D2, MERELY "MONITOR" AND "NO ACTION"
+###I'M ALSO NOTICING THAT THE NUMBER OF HINTS IS DIFFERENT FOR ANY GIVEN SCORE IN D2 RELATIVE TO THE HINTS PROVIDED IN D1
