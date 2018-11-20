@@ -10,7 +10,8 @@ For this assignment we will be using data from the Assistments Intelligent Tutor
 
 #Install & call libraries
 ```{r}
-install.packages("party", "rpart")
+install.packages("party")
+install.packages("rpart")
 
 library(rpart)
 library(party)
@@ -65,7 +66,7 @@ plot(score_ctree)
 ```
 
 Please interpret the tree, which two behaviors do you think the teacher should most closely pay attemtion to?
-Answer: 
+#Answer: 
 Those who ask for no more than 12 hints but got no more than 0.629 percentage prior questions correct, and 
 Those who ask for more than 12 hints
 
