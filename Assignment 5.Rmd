@@ -83,7 +83,7 @@ Compare the predicted advice with the actual advice that these students recieved
 
 ```{r}
 
-
+mean(ifelse(D2$prediction == "no action", 1, 0))
 
 ```
 
