@@ -1,7 +1,7 @@
 ---
 title: "Assignment 5 - Decision Trees"
-author: "Charles Lang"
-date: "November 9, 2016"
+author: "Yuewen Lin"
+date: "November 20, 2016"
 output: html_document
 ---
 For this assignment we will be using data from the Assistments Intelligent Tutoring system. This system gives students hints based on how they perform on math problems. 
@@ -16,13 +16,14 @@ library(party)
 
 ## Part I
 ```{r}
-D1 <- 
+D1 <- read.csv("intelligent_tutor.csv", header = TRUE)
 ```
 
 ##Classification Tree
 First we will build a classification tree to predict which students ask a teacher for help, which start a new session, or which give up, based on whether or not the student completed a session (D1$complete) and whether or not they asked for hints (D1$hint.y). 
 ```{r}
-
+library(rpart)
+library(party)
 c.tree <- rpart(action ~ hint.y + complete, method="class", data=D1) #Notice the standard R notion for a formula X ~ Y
 
 #Look at the error of this tree
@@ -60,13 +61,15 @@ plot(score_ctree)
 
 Please interpret the tree, which two behaviors do you think the teacher should most closely pay attemtion to?
 
+A: The behaviors of 1)using more than 12 hints and 2)having a correct percentage of less than or equal to 0.629 on the prior questions should be most closely pay attention to, because among each qroups (Node7 and Node 9), the individuals share the same behaviors, but there are more of them categorized as "intervene" and "monitor". This probabaly implies that the two behaviors associated with these two groups are problematic.
+
 #Test Tree
 Upload the data "intelligent_tutor_new.csv". This is a data set of a differnt sample of students doing the same problems in the same system. We can use the tree we built for the previous data set to try to predict the "advice" we should give the teacher about these new students. 
 
 ```{r}
 #Upload new data
 
-D2 <- 
+D2 <- read.csv("intelligent_tutor_new.csv", header = TRUE)
 
 #Generate predicted advice for new students based on tree generated from old students
 
@@ -75,3 +78,9 @@ D2$prediction <- predict(score_ctree, D2)
 ``` 
 ## Part III
 Compare the predicted advice with the actual advice that these students recieved. What is the difference between the observed and predicted results?
+
+```{r}
+mean(ifelse(D2$prediction == "no action", 1, 0))
+
+```
+A: Because compared to D1, all students achieved a score of 1 in D2, which means that no action should be carried out to help them, and thus the percentage of "no action" should be zero. As calculated above, "no action" takes up 58 percent of all the predictions, which is far more than zero percent for the actural advice.
