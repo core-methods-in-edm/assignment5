@@ -1,3 +1,4 @@
+#ASSIGNMENT 5 TEST - 11/26/18
 ---
 title: "Assignment 5 - Decision Trees"
 author: "Charles Lang"
@@ -115,3 +116,5 @@ Compare the predicted advice with the actual advice that these students recieved
 ###HOW CAN I COMPARE, WHEN THERE ARE NO ID VARIABLES IN THE 2ND DATASET?
 ###THE MOST OBVIOUS DIFFERENCE AT FIRST GLANCE, IS THAT THERE IS NO "INTERVENE" FOR D2, MERELY "MONITOR" AND "NO ACTION"
 ###I'M ALSO NOTICING THAT THE NUMBER OF HINTS IS DIFFERENT FOR ANY GIVEN SCORE IN D2 RELATIVE TO THE HINTS PROVIDED IN D1
+
+#Calculate the sum of the monitor (if noaction==1, ifelse==0, mean)
