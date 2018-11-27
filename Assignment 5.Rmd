@@ -8,7 +8,7 @@ For this assignment we will be using data from the Assistments Intelligent Tutor
 
 #Install & call libraries
 ```{r}
-install.packages("party", "rpart")
+#install.packages("party", "rpart")
 
 library(rpart)
 library(party)
@@ -16,7 +16,7 @@ library(party)
 
 ## Part I
 ```{r}
-D1 <- 
+D1 <- read.csv("intelligent_tutor.csv")
 ```
 
 ##Classification Tree
@@ -46,6 +46,7 @@ hist(D1$score)
 #Create a categorical outcome variable based on student score to advise the teacher using an "ifelse" statement
 ```{r}
 D1$advice <- ifelse(D1$score <=0.4, "intervene", ifelse(D1$score > 0.4 & D1$score <=0.8, "monitor", "no action"))
+# 2 - monitor
 ```
 
 #Build a decision tree that predicts "advice" based on how many problems students have answered before, the percentage of those problems they got correct and how many hints they required
@@ -60,13 +61,16 @@ plot(score_ctree)
 
 Please interpret the tree, which two behaviors do you think the teacher should most closely pay attemtion to?
 
+# 1. Use of hints
+# 2. Number of previously done problems
+
 #Test Tree
 Upload the data "intelligent_tutor_new.csv". This is a data set of a differnt sample of students doing the same problems in the same system. We can use the tree we built for the previous data set to try to predict the "advice" we should give the teacher about these new students. 
 
 ```{r}
 #Upload new data
 
-D2 <- 
+D2 <- read.csv("intelligent_tutor_new.csv")
 
 #Generate predicted advice for new students based on tree generated from old students
 
@@ -75,3 +79,14 @@ D2$prediction <- predict(score_ctree, D2)
 ``` 
 ## Part III
 Compare the predicted advice with the actual advice that these students recieved. What is the difference between the observed and predicted results?
+```{r}
+table(D2$prediction)
+#Upload new data
+D2$advice <- ifelse(D2$score <=0.4, "intervene", ifelse(D2$score > 0.4 & D2$score <=0.8, "monitor", "no action"))
+table(D2$advice)
+
+
+```
+# The predicted results have a much higher occurrence of "monitor" recommendations, at 84/200 (43%) instead of 0/200% (0%) following the 40%/80% method. There were no false positives on interventions, however, so in general the predictions were correct in judging that the students did not need intervention. 
+
+
