@@ -8,15 +8,13 @@ For this assignment we will be using data from the Assistments Intelligent Tutor
 
 #Install & call libraries
 ```{r}
-install.packages("party", "rpart")
-
 library(rpart)
 library(party)
 ```
 
 ## Part I
 ```{r}
-D1 <- 
+D1 <- read.csv("intelligent_tutor.csv")
 ```
 
 ##Classification Tree
@@ -30,6 +28,11 @@ printcp(c.tree)
 
 #Plot the tree
 post(c.tree, file = "tree.ps", title = "Session Completion Action: 1 - Ask teacher, 2 - Start new session, 3 - Give up")
+
+library(rpart.plot)
+plot(c.tree)
+text(c.tree)
+rpart.plot(c.tree)
 
 ```
 ## Part II
@@ -56,9 +59,12 @@ score_ctree <- ctree(factor(advice) ~ prior_prob_count + prior_percent_correct +
 #Plot tree
 ```{r}
 plot(score_ctree)
+
 ```
 
 Please interpret the tree, which two behaviors do you think the teacher should most closely pay attemtion to?
+
+Teachers should pay closely attention to "asking for hints" and "prior problem count". In the left side of the tree diagram, both nodes have the highest number of students who need interevene from teachers. Also, students who ask less than 12 hints (including those who does not ask for hints) have higher probability of getting lower scores.
 
 #Test Tree
 Upload the data "intelligent_tutor_new.csv". This is a data set of a differnt sample of students doing the same problems in the same system. We can use the tree we built for the previous data set to try to predict the "advice" we should give the teacher about these new students. 
@@ -66,12 +72,23 @@ Upload the data "intelligent_tutor_new.csv". This is a data set of a differnt sa
 ```{r}
 #Upload new data
 
-D2 <- 
+D2 <- read.csv("intelligent_tutor_new.csv")
 
 #Generate predicted advice for new students based on tree generated from old students
 
 D2$prediction <- predict(score_ctree, D2)
 
+
 ``` 
 ## Part III
 Compare the predicted advice with the actual advice that these students recieved. What is the difference between the observed and predicted results?
+```{r}
+D1$prediction <- predict(score_ctree, D1)
+
+accuracy = sum(D1$advice == D1$prediction)/378
+
+accuracy
+
+#The accuracy rate is 54.59%, which is not very ideal for teachers to adopt this method. 
+
+```
