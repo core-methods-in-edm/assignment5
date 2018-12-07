@@ -16,7 +16,7 @@ library(party)
 
 ## Part I
 ```{r}
-D1 <- 
+D1 <- read.table("intelligent_tutor.csv", sep = ",", header = TRUE)
 ```
 
 ##Classification Tree
@@ -27,6 +27,15 @@ c.tree <- rpart(action ~ hint.y + complete, method="class", data=D1) #Notice the
 
 #Look at the error of this tree
 printcp(c.tree)
+
+# Root node error: 250/378 = 0.66138
+
+# n= 378 
+
+#     CP nsplit rel error xerror     xstd
+#1 0.052      0     1.000  1.096 0.034730
+#2 0.012      1     0.948  0.996 0.036873
+#3 0.010      2     0.936  0.980 0.037138
 
 #Plot the tree
 post(c.tree, file = "tree.ps", title = "Session Completion Action: 1 - Ask teacher, 2 - Start new session, 3 - Give up")
@@ -58,7 +67,11 @@ score_ctree <- ctree(factor(advice) ~ prior_prob_count + prior_percent_correct +
 plot(score_ctree)
 ```
 
-Please interpret the tree, which two behaviors do you think the teacher should most closely pay attemtion to?
+Please interpret the tree, which two behaviors do you think the teacher should most closely pay attention to?
+```{r}
+# Students asking for more than 12 hints are likely to need interventions. 
+```
+
 
 #Test Tree
 Upload the data "intelligent_tutor_new.csv". This is a data set of a differnt sample of students doing the same problems in the same system. We can use the tree we built for the previous data set to try to predict the "advice" we should give the teacher about these new students. 
@@ -66,12 +79,18 @@ Upload the data "intelligent_tutor_new.csv". This is a data set of a differnt sa
 ```{r}
 #Upload new data
 
-D2 <- 
+D2 <- read.csv("intelligent_tutor_new.csv", header = T)
 
 #Generate predicted advice for new students based on tree generated from old students
 
 D2$prediction <- predict(score_ctree, D2)
+D2$prediction
 
 ``` 
 ## Part III
-Compare the predicted advice with the actual advice that these students recieved. What is the difference between the observed and predicted results?
+Compare the predicted advice with the actual advice that these students received. What is the difference between the observed and predicted results?
+```{r}
+mean(ifelse(D2$prediction == "no action", 1, 0))
+# Given the mean = 0.58, no action is needed.
+```
+
