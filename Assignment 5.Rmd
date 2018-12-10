@@ -1,22 +1,21 @@
 ---
 title: "Assignment 5 - Decision Trees"
-author: "Charles Lang"
-date: "November 9, 2016"
+author: "Jingyi Lin"
+date: "Dec. 2, 2018"
 output: html_document
 ---
 For this assignment we will be using data from the Assistments Intelligent Tutoring system. This system gives students hints based on how they perform on math problems. 
 
 #Install & call libraries
 ```{r}
-install.packages("party", "rpart")
-
-library(rpart)
-library(party)
+ install.packages("party", "rpart")
+	library(party)
+	library(rpart)
 ```
 
 ## Part I
 ```{r}
-D1 <- 
+D1 <- read.table("intelligent_tutor.csv", sep = ",", header = TRUE)
 ```
 
 ##Classification Tree
@@ -66,7 +65,7 @@ Upload the data "intelligent_tutor_new.csv". This is a data set of a differnt sa
 ```{r}
 #Upload new data
 
-D2 <- 
+D2 <- read.csv("intelligent_tutor_new.csv", header = TRUE)
 
 #Generate predicted advice for new students based on tree generated from old students
 
@@ -75,3 +74,7 @@ D2$prediction <- predict(score_ctree, D2)
 ``` 
 ## Part III
 Compare the predicted advice with the actual advice that these students recieved. What is the difference between the observed and predicted results?
+```{r}
+mean(ifelse(D2$prediction == "no action", 1, 0))
+```
+
