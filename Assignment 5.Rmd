@@ -16,7 +16,8 @@ library(party)
 
 ## Part I
 ```{r}
-D1 <- 
+D1 <- read.csv("itellgent_tutor.csv", header = T)
+
 ```
 
 ##Classification Tree
