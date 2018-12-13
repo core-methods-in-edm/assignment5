@@ -8,7 +8,8 @@ For this assignment we will be using data from the Assistments Intelligent Tutor
 
 #Install & call libraries
 ```{r}
-install.packages("party", "rpart")
+install.packages("party")
+install.packages("rpart")
 
 library(rpart)
 library(party)
@@ -16,7 +17,7 @@ library(party)
 
 ## Part I
 ```{r}
-D1 <- 
+D1 <- read.csv("intelligent_tutor.csv", sep = ",", header = TRUE)
 ```
 
 ##Classification Tree
@@ -59,6 +60,8 @@ plot(score_ctree)
 ```
 
 Please interpret the tree, which two behaviors do you think the teacher should most closely pay attemtion to?
+In my opinion, the two behaiviors that the teacher should most closely pay attention to are that how many hints they ask and what percentage they were correct in the prior assignment. This is because those students with more than 12 hints are very likely to need intervention (about 40% of them need intrvention). And even those with less than 12 hints, if they were correct less than 62.9% in the prior assignment, they are still likely to need intervention (about 30% of them need intervention).
+
 
 #Test Tree
 Upload the data "intelligent_tutor_new.csv". This is a data set of a differnt sample of students doing the same problems in the same system. We can use the tree we built for the previous data set to try to predict the "advice" we should give the teacher about these new students. 
@@ -66,7 +69,7 @@ Upload the data "intelligent_tutor_new.csv". This is a data set of a differnt sa
 ```{r}
 #Upload new data
 
-D2 <- 
+D2 <- read.csv("intelligent_tutor_new.csv", header = TRUE)
 
 #Generate predicted advice for new students based on tree generated from old students
 
@@ -75,3 +78,8 @@ D2$prediction <- predict(score_ctree, D2)
 ``` 
 ## Part III
 Compare the predicted advice with the actual advice that these students recieved. What is the difference between the observed and predicted results?
+```{r}
+#All the students in the 2nd sample scored 1, which mens none of them needed action. 
+mean(ifelse(D2$prediction == "no action", 1, 0))
+```
+Threfore, for 58% of the students, the predicted advice was accurate (agreed with the observed).
