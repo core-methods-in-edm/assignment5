@@ -16,7 +16,7 @@ library(party)
 
 ## Part I
 ```{r}
-D1 <- 
+D1 <- read.csv("intelligent_tutor.csv", header=TRUE)
 ```
 
 ##Classification Tree
@@ -60,13 +60,15 @@ plot(score_ctree)
 
 Please interpret the tree, which two behaviors do you think the teacher should most closely pay attemtion to?
 
+Students who ask for more than 12 hints are very likely to need intervention，as well as the students who ask for less than 12 hints but got no more than 62.9% prior questions correct.
+
 #Test Tree
 Upload the data "intelligent_tutor_new.csv". This is a data set of a differnt sample of students doing the same problems in the same system. We can use the tree we built for the previous data set to try to predict the "advice" we should give the teacher about these new students. 
 
 ```{r}
 #Upload new data
 
-D2 <- 
+D2 <- read.csv("intelligent_tutor_new.csv", header = TRUE)
 
 #Generate predicted advice for new students based on tree generated from old students
 
@@ -75,3 +77,7 @@ D2$prediction <- predict(score_ctree, D2)
 ``` 
 ## Part III
 Compare the predicted advice with the actual advice that these students recieved. What is the difference between the observed and predicted results?
+```{r}
+mean(ifelse(D2$prediction == "no action", 1, 0))
+```
+The rate of accuracy is 58%
