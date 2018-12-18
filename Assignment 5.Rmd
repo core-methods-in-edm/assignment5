@@ -16,7 +16,7 @@ library(party)
 
 ## Part I
 ```{r}
-D1 <- 
+D1 <- read.table("intelligent_tutor.csv", sep = ",", header = TRUE)
 ```
 
 ##Classification Tree
@@ -66,7 +66,7 @@ Upload the data "intelligent_tutor_new.csv". This is a data set of a differnt sa
 ```{r}
 #Upload new data
 
-D2 <- 
+D2 <- read.csv("intelligent_tutor_new.csv", header = TRUE)
 
 #Generate predicted advice for new students based on tree generated from old students
 
@@ -75,3 +75,9 @@ D2$prediction <- predict(score_ctree, D2)
 ``` 
 ## Part III
 Compare the predicted advice with the actual advice that these students recieved. What is the difference between the observed and predicted results?
+```{r}
+mean(ifelse(D2$prediction == "no action", 1, 0))
+
+#The difference between the observed and predicted results is 58%. 
+```
+
