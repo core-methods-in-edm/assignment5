@@ -8,19 +8,22 @@ For this assignment we will be using data from the Assistments Intelligent Tutor
 
 #Install & call libraries
 ```{r}
-install.packages("party", "rpart")
-
+#install.packages("party", "rpart")
+library(dplyr)
 library(rpart)
 library(party)
+library(plyr)
+library(ggplot2)
 ```
 
 ## Part I
 ```{r}
-D1 <- 
+D1 <- read.csv("intelligent_tutor.csv")
 ```
 
 ##Classification Tree
 First we will build a classification tree to predict which students ask a teacher for help, which start a new session, or which give up, based on whether or not the student completed a session (D1$complete) and whether or not they asked for hints (D1$hint.y). 
+
 ```{r}
 
 c.tree <- rpart(action ~ hint.y + complete, method="class", data=D1) #Notice the standard R notion for a formula X ~ Y
@@ -55,10 +58,14 @@ score_ctree <- ctree(factor(advice) ~ prior_prob_count + prior_percent_correct +
 
 #Plot tree
 ```{r}
+tiff("tree.tiff", units="in", width=18, height=10, res=300)
 plot(score_ctree)
+dev.off()
 ```
 
 Please interpret the tree, which two behaviors do you think the teacher should most closely pay attemtion to?
+
+A: if # of hints is too high/ if prior_percent_correct is too low.
 
 #Test Tree
 Upload the data "intelligent_tutor_new.csv". This is a data set of a differnt sample of students doing the same problems in the same system. We can use the tree we built for the previous data set to try to predict the "advice" we should give the teacher about these new students. 
@@ -66,7 +73,7 @@ Upload the data "intelligent_tutor_new.csv". This is a data set of a differnt sa
 ```{r}
 #Upload new data
 
-D2 <- 
+D2 <- read.csv("intelligent_tutor_new.csv")
 
 #Generate predicted advice for new students based on tree generated from old students
 
@@ -75,3 +82,19 @@ D2$prediction <- predict(score_ctree, D2)
 ``` 
 ## Part III
 Compare the predicted advice with the actual advice that these students recieved. What is the difference between the observed and predicted results?
+
+```{r}
+D3 <- select(D2,prediction)
+t <- count(D3,prediction)
+
+# Pie Chart
+bp<- ggplot(t, aes(x="", y=n, fill=prediction))+
+geom_bar(width = 1, stat = "identity")
+bp
+
+pie <- bp + coord_polar("y", start=0)
+pie + scale_fill_brewer(palette="Blues")+
+  theme_minimal()
+
+```
+
