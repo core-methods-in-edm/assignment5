@@ -1,7 +1,7 @@
 ---
 title: "Assignment 5 - Decision Trees"
-author: "Charles Lang"
-date: "November 9, 2016"
+author: "Xinxu Shen"
+date: "December 14, 2018"
 output: html_document
 ---
 For this assignment we will be using data from the Assistments Intelligent Tutoring system. This system gives students hints based on how they perform on math problems. 
@@ -16,7 +16,7 @@ library(party)
 
 ## Part I
 ```{r}
-D1 <- 
+D1 <- read.csv('intelligent_tutor.csv')
 ```
 
 ##Classification Tree
@@ -60,13 +60,15 @@ plot(score_ctree)
 
 Please interpret the tree, which two behaviors do you think the teacher should most closely pay attemtion to?
 
+teachers should pay close attention to students who use more than 12 hints and students whose prior_percent_correct is less than 0.629. Using more than 12 hints indicate that students do not quite how to solve the problem and rely heavily on hints. Accuracy less than 0.629 suggested low accuracy and students probably did not understand and need intervene.
+
 #Test Tree
 Upload the data "intelligent_tutor_new.csv". This is a data set of a differnt sample of students doing the same problems in the same system. We can use the tree we built for the previous data set to try to predict the "advice" we should give the teacher about these new students. 
 
 ```{r}
 #Upload new data
 
-D2 <- 
+D2 <- read.csv('intelligent_tutor_new.csv')
 
 #Generate predicted advice for new students based on tree generated from old students
 
@@ -75,3 +77,10 @@ D2$prediction <- predict(score_ctree, D2)
 ``` 
 ## Part III
 Compare the predicted advice with the actual advice that these students recieved. What is the difference between the observed and predicted results?
+
+```{r}
+mean(ifelse(D2$prediction == "no action", 1, 0))
+
+#because all students in sample two got score 1, which means none of them need to receive intevene. so if the predicted advice is "no action", the prediction is correct. I calculated the mean of correct prediction, which is 0.58, which suggested that this model correctly predicted 58% of data.
+```
+
