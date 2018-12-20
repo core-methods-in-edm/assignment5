@@ -1,15 +1,13 @@
 ---
 title: "Assignment 5 - Decision Trees"
-author: "Charles Lang"
-date: "November 9, 2016"
+author: "Oren Ross"
 output: html_document
 ---
 For this assignment we will be using data from the Assistments Intelligent Tutoring system. This system gives students hints based on how they perform on math problems. 
 
 #Install & call libraries
-```{r}
+COMMENTED OUT
 install.packages("party", "rpart")
-
 install.packages("rpart.plot")
 install.packages("ggplot2")
 
@@ -17,10 +15,14 @@ library(rpart)
 library(party)
 library(rpart.plot)
 library(ggplot2)
-```
+
 
 ## Part I
 ```{r}
+library(rpart)
+library(party)
+library(rpart.plot)
+library(ggplot2)
 
 D1 <- read.csv("intelligent_tutor.csv")
 
@@ -103,29 +105,30 @@ plot(pred_ctree)
 
 sum(D2$prediction=="monitor")
 
+sum(D2$prediction=="monitor")/
+  sum(D2$score)
+
 ```
+
+Out of the 200 students that got a 1, 84 were recommended to be monitored. Therefore the prediction tree failed 42% of the time.
+
 
 ## Part III
 Compare the predicted advice with the actual advice that these students recieved. What is the difference between the observed and predicted results?
 
 ```{r}
 
-geom_bar(aes(D1$advice, D1$action), D1)
+#geom_bar(aes(D1$advice, D1$action), D1)
 
 
 d <- ggplot(D1, aes(advice, as.factor(action)))
 
 
-d + geom_bin2d(bins=3) 
+d + geom_bin2d(bins=3) +  stat_bin2d(geom = "text", aes(label = ..count..), binwidth = 1) + labs(title =  "Action versus Advice", x = "Advice", y = "Action") + scale_y_discrete(labels=c("No Action", "Monitor", "Intervene"))
 
 
+#Based on this, we have a visual representation of the Action taken versus the advice based on the IT system. A perfect result would have been a diagnol of light blue from the top left corner to the bottom right. But as can be seen, this did not occur. This makes me question the results of the prediction tree.
 
-
-+ geom_text(stat='count', aes(label=..count..), vjust=-1)
-
-
-
-, labels = count.fields(advice, action)
 
 ```
 
