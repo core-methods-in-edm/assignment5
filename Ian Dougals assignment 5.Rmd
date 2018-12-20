@@ -1,0 +1,48 @@
+---
+title: "Ian Douglas assignment 5"
+author: "ian douglas"
+date: "11/13/2018"
+output: html_document
+---
+```{r}
+#install.packages("party", "rpart")
+
+library(rpart)
+library(party)
+```
+```{r}
+DF1 <- read.csv("intelligent_tutor.csv")
+```
+```{R}
+
+c.tree <- rpart(action ~ hint.y + complete, method="class", data=DF1)
+```
+```{r}
+printcp(c.tree)
+
+post(c.tree, file = "tree.ps", title = "Session Completion Action: 1 - Ask teacher, 2 - Start new session, 3 - Give up")
+```
+```{r}
+hist(D1$score)
+```
+
+```{r}
+DF1$advice <- ifelse(DF1$score <=0.4, "intervene", ifelse(DF1$score > 0.4 & DF1$score <=0.8, "monitor", "no action"))
+```
+```{r}
+ctree2 <- ctree(factor(advice) ~ prior_prob_count + prior_percent_correct + hints, DF1)
+```
+```{r}
+plot(ctree2)
+```
+#Second Part (new data)
+```{r}
+DF2 <- read.csv("intelligent_tutor_new.csv", header = TRUE)
+DF2$prediction <- predict(ctree2, DF2)
+```
+```{r}
+mean(ifelse(D2$prediction == "no action", 1, 0))
+```
+
+
+
