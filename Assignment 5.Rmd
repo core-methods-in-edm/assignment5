@@ -16,7 +16,7 @@ library(party)
 
 ## Part I
 ```{r}
-D1 <- 
+D1 <- read.table("intelligent_tutor.csv", sep = ",", header = TRUE)
 ```
 
 ##Classification Tree
@@ -31,12 +31,38 @@ printcp(c.tree)
 #Plot the tree
 post(c.tree, file = "tree.ps", title = "Session Completion Action: 1 - Ask teacher, 2 - Start new session, 3 - Give up")
 
+#Classification tree:
+#rpart(formula = action ~ hint.y + complete, data = D1, method = "class")
+
+#Variables actually used in tree construction:
+#[1] complete hint.y  
+
+#Root node error: 250/378 = 0.66138
+
+#n= 378 
+
+#     CP nsplit rel error xerror     xstd
+#1 0.052      0     1.000  1.096 0.034730
+#2 0.012      1     0.948  1.024 0.036359
+#3 0.010      2     0.936  1.060 0.035602
+
 ```
+
+
+* CP stands for Complexity Parameter - this value represents the cost in complexity for splitting a node. It reflects a ration between the number of nodes and the accuracy of the model. The default cutoff is 0.010.
+* nsplit stands for the number of splits in the tree
+* error stands for the overall percent error in predictions of the tree
+* xerror stands for the average cross-validated error in the tree
+* xstd stands for the average cross-validated standard devation of the error in teh tree
+
+
 ## Part II
 
 #Regression Tree
 
-We want to see if we can build a decision tree to help teachers decide which students to follow up with, based on students' performance in Assistments. We will create three groups ("teacher should intervene", "teacher should monitor student progress" and "no action") based on students' previous use of the system and how many hints they use. To do this we will be building a decision tree using the "party" package. The party package builds decision trees based on a set of statistical stopping rules.
+1. We want to see if we can build a decision tree to help teachers decide which students to follow up with, based on students' performance in Assistments.
+2. We will create three groups ("teacher should intervene", "teacher should monitor student progress" and "no action") based on students' previous use of the system and how many hints they use. To do this we will be building a decision tree using the "party" package. 
+3. The party package builds decision trees based on a set of statistical stopping rules.
 
 #Take a look at our outcome variable "score"
 ```{r}
@@ -59,19 +85,34 @@ plot(score_ctree)
 ```
 
 Please interpret the tree, which two behaviors do you think the teacher should most closely pay attemtion to?
+```{r}
+#Students asking for more than 12 hints are need interventions
+```
+
 
 #Test Tree
-Upload the data "intelligent_tutor_new.csv". This is a data set of a differnt sample of students doing the same problems in the same system. We can use the tree we built for the previous data set to try to predict the "advice" we should give the teacher about these new students. 
+1. Upload the data "intelligent_tutor_new.csv".
+2. This is a data set of a differnt sample of students doing the same problems in the same system. 
+3. We can use the tree we built for the previous data set to try to predict the "advice" we should give the teacher about these new students. 
 
 ```{r}
 #Upload new data
 
-D2 <- 
-
+D2 <- read.csv("intelligent_tutor_new.csv", header = TRUE)
+D2
 #Generate predicted advice for new students based on tree generated from old students
 
 D2$prediction <- predict(score_ctree, D2)
-
+D2$prediction
 ``` 
 ## Part III
 Compare the predicted advice with the actual advice that these students recieved. What is the difference between the observed and predicted results?
+
+
+* All students in the new sample achieved a score of 1, and therefore would need no action. Therefore the accuracy of your model on the new data would be:
+```{r}
+mean(ifelse(D2$prediction == "no action", 1, 0))
+
+#[1] 0.58 thus mean is 0.58, no need action.
+```
+
