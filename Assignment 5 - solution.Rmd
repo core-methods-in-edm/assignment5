@@ -8,7 +8,6 @@ For this assignment we will be using data from the Assistments Intelligent Tutor
 
 #Install & call libraries
 ```{r}
-install.packages("party", "rpart")
 
 library(rpart)
 library(party)
@@ -67,6 +66,7 @@ plot(score_ctree)
 ```
 
 Please interpret the tree, which two behaviors do you think the teacher should most closely pay attemtion to?
+A: hints and prior correct rate(prior_percent_correct)
 
 There are several ways you could answer this question. The main point woul dbe to justify your answer by referring to the distribution of students in each terminal node. For example, students who ask for more than 12 hints are very likely to need intervention.
 
@@ -85,6 +85,7 @@ D2$prediction <- predict(score_ctree, D2)
 ``` 
 ## Part III
 Compare the predicted advice with the actual advice that these students recieved. What is the difference between the observed and predicted results?
+
 ```{r}
 #All students in the new sample achieved a score of 1, and therefore would need no action. Therefore the accuracy of your model on the new data would be:
 
