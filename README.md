@@ -10,5 +10,5 @@ prior_prob_count - The number of problems a student has done in the system prior
 score - The score the student achieved in the current session  
 hints - The number of hints the student requested in the current session  
 hint.y - Whether or not the student asked for hints in the current session  
-complete - Whether or not the student completed the cirrent session  
+complete - Whether or not the student completed the current session  
 action - The action suggested by the system to a teacher about a given student based on their performance

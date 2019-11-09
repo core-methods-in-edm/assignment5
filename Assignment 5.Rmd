@@ -1,37 +1,69 @@
 ---
-title: "Assignment 5 - Decision Trees"
-author: "Charles Lang"
+title: "Assignment 5 - Decision Trees Response"
+author: "Timothy Lee"
 date: "November 9, 2016"
 output: html_document
 ---
 For this assignment we will be using data from the Assistments Intelligent Tutoring system. This system gives students hints based on how they perform on math problems. 
 
 #Install & call libraries
-```{r}
-install.packages("party", "rpart")
+```{r eval = FALSE}
+#Install needed packages
+#I've done this, so eval = FALSE so it doesn't run each time
+install.packages("party")
+install.packages("rpart")
+```
 
+
+```{r message = FALSE}
+#Import rpart
 library(rpart)
+
+#Import party!
 library(party)
 ```
 
 ## Part I
 ```{r}
-D1 <- 
+D1 <- read.csv("intelligent_tutor.csv")
 ```
 
-##Classification Tree
-First we will build a classification tree to predict which students ask a teacher for help, which start a new session, or which give up, based on whether or not the student completed a session (D1$complete) and whether or not they asked for hints (D1$hint.y). 
-```{r}
 
-c.tree <- rpart(action ~ hint.y + complete, method="class", data=D1) #Notice the standard R notion for a formula X ~ Y
+Codebook
+* id - student id
+* prior_prob_count - The number of problems a student has done in the system prior to the surrent session  
+* score - The score the student achieved in the current session  
+* hints - The number of hints the student requested in the current session  
+* hint.y - Whether or not the student asked for hints in the current session  
+* complete - Whether or not the student completed the current session  
+* action - The action suggested by the system to a teacher about a given student based on their performance
+
+##Classification Tree - CART
+First we will build a classification tree to predict which students ask a teacher for help, which start a new session, or which give up, based on whether or not the student completed a session `(D1$complete)` and whether or not they asked for hints `(D1$hint.y)`. 
+```{r}
+#Build the classification tree
+c.tree <- rpart(action ~ hint.y + complete, method = "class", data = D1) #Notice the standard R notion for a formula X ~ Y
 
 #Look at the error of this tree
 printcp(c.tree)
 
 #Plot the tree
-post(c.tree, file = "tree.ps", title = "Session Completion Action: 1 - Ask teacher, 2 - Start new session, 3 - Give up")
+#This saves it to a file called tree.ps
+#post(c.tree, filename = "tree.ps", title = "Session Completion Action: 1 - Ask teacher, 2 - Start new session, 3 - Give up")
+
+#This prints our tree to the Rmd file, which is what we want
+post(c.tree, filename = "", title = "Session Completion Action: 1 - Ask teacher, 2 - Start new session, 3 - Give up")
 
 ```
+Printcp output gives error rates at each split:
+
+* Root node error - the number of misclassifications/total n in the top-level (root) node, before any splits have occurred
+* CP - looks like the marginal decrease in `rel error` with each split
+* nsplit - number of splits in the tree
+* rel error - When multiplied by the root node error, gives the resubstitution error rate (error rate computed against the training sample, so probably crap)
+* xerror - When multiplied by the root node error, gives the cross-validated error rate using 10-fold CV.
+* xstd - ??? - probably K-fold error rate standard error?
+
 ## Part II
 
 #Regression Tree
@@ -40,25 +72,45 @@ We want to see if we can build a decision tree to help teachers decide which stu
 
 #Visualize our outcome variable "score"
 ```{r}
-
+hist(D1$score)
 ```
 
 #Create a categorical outcome variable based on student score to advise the teacher using an "ifelse" statement
 ```{r}
-D1$advice <- 
+#Use nested ifelse statements to create 3 categories
+#ignore if the student gets a score above 0.7
+#monitor if student is between 0.3 and 0.7
+#intervene if student is 0.3 or below
+
+D1$advice <- ifelse(D1$score > 0.3,
+                    ifelse(D1$score > 0.7,
+                           "ignore",
+                           "monitor"),
+                    "intervene"
+                    )    
 ```
 
 #Build a decision tree that predicts "advice" based on how many problems students have answered before, the percentage of those problems they got correct and how many hints they required
 ```{r}
-score_ctree <- 
+#Create a conditional inference tree using ctree
+#Recursive partitioning with continuous and categorical data
+
+score_ctree <- ctree(factor(advice) ~ prior_prob_count +
+                                      prior_percent_correct + 
+                                      hints,
+                     data = D1)
 ```
 
 #Plot tree
 ```{r}
-
+plot(score_ctree)
 ```
 
-Please interpret the tree, which two behaviors do you think the teacher should most closely pay attemtion to?
+Please interpret the tree, which two behaviors do you think the teacher should most closely pay attention to?
+
+*Teachers should definitely pay attention to hints. Hints are relevant at  two split levels. It also serves as an initial split. THose who ask for any hints (right of the tree) are far more likely to be in the intervene and monitor groups, while those who ask for no hints are much more likely to be ignorable.* 
+
+*Teachers should also pay attention to prior prob count correct. Relative to prior percent correct, differences in prior prob count are decisive for more students (240 vs 131), suggest greater magnitude increases in the number of students where teachers need to intervene rather than ignore, and similar magnitude increases in the proportion that they should monitor rather than ignore*
 
 #Test Tree
 Upload the data "intelligent_tutor_new.csv". This is a data set of a differnt sample of students doing the same problems in the same system. We can use the tree we built for the previous data set to try to predict the "advice" we should give the teacher about these new students. 
@@ -66,15 +118,37 @@ Upload the data "intelligent_tutor_new.csv". This is a data set of a differnt sa
 ```{r}
 #Upload new data
 
-D2 <- 
+D2 <- read.csv("intelligent_tutor_new.csv")
 
 #Generate predicted advice using the predict() command for new students based on tree generated from old students
-
-D2$prediction <- 
+D2$prediction <- predict(score_ctree, D2)
 
 ``` 
+
+
 ## Part III
 Compare the predicted advice with the actual advice that these students recieved. What is the difference between the observed and predicted results?
+
+```{r}
+#Compute the actual advice that the Test set students received
+#Weirdly all the score data for the test set == 1, so we should expect everyone in the test set to be ignored.
+D2$advice <- ifelse(D2$score > 0.3,
+                    ifelse(D2$score > 0.7,
+                           "ignore",
+                           "monitor"),
+                    "intervene"
+                    )
+
+#Compute difference between observed and predicted results
+conf_mat <- table(D2$advice, D2$prediction)
+conf_mat
+
+#Calculate accuracy based on ignore being the 'positive' result - did the model correctly identify those who could be ignored?
+accuracy <- conf_mat[1,1]/sum(conf_mat[1, ])
+accuracy
+
+```
+
 
 ### To Submit Your Assignment
 
