@@ -2,7 +2,10 @@
 title: "Assignment 5 - Decision Trees Response"
 author: "Timothy Lee"
 date: "November 9, 2016"
-output: html_document
+output:
+  html_notebook:
+  html_document: default
+  pdf_document: default
 ---
 For this assignment we will be using data from the Assistments Intelligent Tutoring system. This system gives students hints based on how they perform on math problems. 
 
@@ -107,6 +110,8 @@ plot(score_ctree)
 ```
 
 Please interpret the tree, which two behaviors do you think the teacher should most closely pay attention to?
+
+*The output does not show properly - bar on the left is ignore, middle is intervene, and right is monitor. This can be seen if you open the plot in a new window and maximise it.*
 
 *Teachers should definitely pay attention to hints. Hints are relevant at  two split levels. It also serves as an initial split. THose who ask for any hints (right of the tree) are far more likely to be in the intervene and monitor groups, while those who ask for no hints are much more likely to be ignorable.* 
 
