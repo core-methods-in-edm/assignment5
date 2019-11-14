@@ -87,7 +87,7 @@ D2$advice <- ifelse(D2$score > 0.4,
                            "no action", "teacher should monitor student progress"),
                     "teacher should intervene"
                     )
-#difference between observed and predicted
+#visualize difference between observed and predicted
 difference_obs_pred <- table(D2$advice, D2$prediction)
 difference_obs_pred 
 #Calculate accuracy 
