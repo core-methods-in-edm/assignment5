@@ -1,22 +1,27 @@
 ---
 title: "Assignment 5 - Decision Trees"
-author: "Charles Lang"
-date: "November 9, 2016"
+author: "Xi Yang"
+date: "November 7, 2019"
 output: html_document
 ---
 For this assignment we will be using data from the Assistments Intelligent Tutoring system. This system gives students hints based on how they perform on math problems. 
 
 #Install & call libraries
 ```{r}
-install.packages("party", "rpart")
-
+# install.packages("party", "rpart")
 library(rpart)
 library(party)
 ```
 
 ## Part I
 ```{r}
-D1 <- 
+D1 <- read.csv("intelligent_tutor.csv")
+# id prior_prob_count - The number of problems a student has done in the system prior to the current session
+# score - The score the student achieved in the current session
+# hints - The number of hints the student requested in the current session
+# hint.y - Whether or not the student asked for hints in the current session
+# complete - Whether or not the student completed the cirrent session
+# action - The action suggested by the system to a teacher about a given student based on their performance
 ```
 
 ##Classification Tree
@@ -36,45 +41,67 @@ post(c.tree, file = "tree.ps", title = "Session Completion Action: 1 - Ask teach
 
 #Regression Tree
 
-We want to see if we can build a decision tree to help teachers decide which students to follow up with, based on students' performance in Assistments. We will create three groups ("teacher should intervene", "teacher should monitor student progress" and "no action") based on students' previous use of the system and how many hints they use. To do this we will be building a decision tree using the "party" package. The party package builds decision trees based on a set of statistical stopping rules.
+We want to see if we can build a decision tree to help teachers decide which students to follow up with, based on students' performance in Assistments. We will create three groups ("teacher should intervene", "teacher should monitor student progress" and "no action") based on students' 【previous use of the system】 and 【how many hints they use】. To do this we will be building a decision tree using the "party" package. The party package builds decision trees based on a set of statistical stopping rules.
 
 #Visualize our outcome variable "score"
 ```{r}
+hist(D1$score)
+
 
 ```
 
 #Create a categorical outcome variable based on student score to advise the teacher using an "ifelse" statement
 ```{r}
-D1$advice <- 
+D1$advice <- ifelse(D1$score <=0.6, "intervene", 
+                    ifelse(D1$score > 0.6 & D1$score <=0.8, "monitor", 
+                           "no action")) 
 ```
 
-#Build a decision tree that predicts "advice" based on how many problems students have answered before, the percentage of those problems they got correct and how many hints they required
+#Build a decision tree that predicts "advice" based on 【how many problems students have answered before】, 【the percentage of those problems they got correct】 and 【how many hints they required】
 ```{r}
-score_ctree <- 
+score_ctree <- ctree(factor(advice) ~ prior_prob_count + prior_percent_correct + hints, D1)
 ```
 
 #Plot tree
 ```{r}
-
+plot(score_ctree)
 ```
 
 Please interpret the tree, which two behaviors do you think the teacher should most closely pay attemtion to?
+```{r}
+# There are two groups of students that the teacher should concern more about. The first group is students who asked more than 26 hints; and the second group is students who ask hints less than 26 more than 0, but got correct percent less than 0.595. These 2 groups represents the 3rd and the 5th histagram in the 3rd level in the tree graph. By the graph, those 2 groups of students tends to have larger amount of "intervene", which means the teacher should pay more attention to them.
 
+
+```
 #Test Tree
 Upload the data "intelligent_tutor_new.csv". This is a data set of a differnt sample of students doing the same problems in the same system. We can use the tree we built for the previous data set to try to predict the "advice" we should give the teacher about these new students. 
 
 ```{r}
 #Upload new data
 
-D2 <- 
+D2 <- read.csv("intelligent_tutor_new.csv")
 
-#Generate predicted advice using the predict() command for new students based on tree generated from old students
+#Generate predicted advice using the predict() command for 【new students】 based on 【tree】 generated from old students
 
-D2$prediction <- 
+D2$prediction <- predict(score_ctree, D2)
 
 ``` 
 ## Part III
-Compare the predicted advice with the actual advice that these students recieved. What is the difference between the observed and predicted results?
+Compare the 【predicted advice】 with the 【actual advice】 that these students recieved. What is the difference between the observed and predicted results?
+```{r}
+D2$advice <- ifelse(D2$score <=0.6, "intervene", 
+                    ifelse(D2$score > 0.6 & D2$score <=0.8, "monitor", 
+                           "no action")) 
+# since all students' scores in the new data are 1, which is what we want, there're all "no actions"
+
+D2$accurate <- ifelse(D2$prediction == "no action", 1, 0)
+library(dplyr)
+count(D2, accurate)
+# the predicted result has 116 same with the observed result.
+sum(D2$accurate)/length(D2$accurate) # 0.58
+# the accuracy of predicted advice is 0.58
+
+```
 
 ### To Submit Your Assignment
 
