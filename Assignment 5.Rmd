@@ -1,28 +1,26 @@
 ---
 title: "Assignment 5 - Decision Trees"
-author: "Charles Lang"
-date: "November 9, 2016"
+author: "Ruiqi Wang"
+date: "November 14, 2019"
 output: html_document
 ---
 For this assignment we will be using data from the Assistments Intelligent Tutoring system. This system gives students hints based on how they perform on math problems. 
 
 #Install & call libraries
 ```{r}
-install.packages("party", "rpart")
-
 library(rpart)
 library(party)
 ```
 
 ## Part I
 ```{r}
-D1 <- 
+library(readr)
+D1 <- read_csv("intelligent_tutor.csv")
 ```
 
 ##Classification Tree
 First we will build a classification tree to predict which students ask a teacher for help, which start a new session, or which give up, based on whether or not the student completed a session (D1$complete) and whether or not they asked for hints (D1$hint.y). 
 ```{r}
-
 c.tree <- rpart(action ~ hint.y + complete, method="class", data=D1) #Notice the standard R notion for a formula X ~ Y
 
 #Look at the error of this tree
@@ -30,7 +28,6 @@ printcp(c.tree)
 
 #Plot the tree
 post(c.tree, file = "tree.ps", title = "Session Completion Action: 1 - Ask teacher, 2 - Start new session, 3 - Give up")
-
 ```
 ## Part II
 
@@ -40,41 +37,47 @@ We want to see if we can build a decision tree to help teachers decide which stu
 
 #Visualize our outcome variable "score"
 ```{r}
-
+hist(D1$score)
 ```
 
 #Create a categorical outcome variable based on student score to advise the teacher using an "ifelse" statement
 ```{r}
-D1$advice <- 
+D1$advice <- ifelse(D1$score>0.7,0,ifelse(D1$score<0.4,2,1))
+
 ```
 
 #Build a decision tree that predicts "advice" based on how many problems students have answered before, the percentage of those problems they got correct and how many hints they required
 ```{r}
-score_ctree <- 
+score_ctree <- rpart(advice ~ prior_prob_count+prior_percent_correct+ hints, method="class", data=D1)
 ```
 
 #Plot tree
 ```{r}
-
+post(score_ctree,title = "Advise the teacher: 2 - definitely should pay close attention to this student, 1 - talk to this student sometimes , 0 - no need to worry about this student")
 ```
 
 Please interpret the tree, which two behaviors do you think the teacher should most closely pay attemtion to?
+#- This tree plot classifies students into three groups. Two behaviours that the teacher should pay closest attention to: students that get more than 1.5 hints and the percentage of those problems they got correct is less than 0.646, or students that have correct percent more than 0.65 but get more than 10.5 hints. 
 
 #Test Tree
 Upload the data "intelligent_tutor_new.csv". This is a data set of a differnt sample of students doing the same problems in the same system. We can use the tree we built for the previous data set to try to predict the "advice" we should give the teacher about these new students. 
 
 ```{r}
 #Upload new data
-
-D2 <- 
+D2 <- read_csv("intelligent_tutor_new.csv")
 
 #Generate predicted advice using the predict() command for new students based on tree generated from old students
-
-D2$prediction <- 
+D2$prediction <- predict(score_ctree,D2)
 
 ``` 
 ## Part III
 Compare the predicted advice with the actual advice that these students recieved. What is the difference between the observed and predicted results?
+```{r}
+#The actual advice that the students received. Since all students here score 1, they will be assign into the group 0.
+D2$advice <- ifelse(D2$score>0.7,0,ifelse(D2$score<0.4,2,1))
+#the proportion of students get correctly assigned into the group 0 by the old prediction. So the correct rate of the classification method on this new dataset is 66.5%
+length(which(D2$prediction[,1]>0.4))/200
+```
 
 ### To Submit Your Assignment
 
