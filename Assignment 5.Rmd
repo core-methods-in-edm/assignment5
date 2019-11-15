@@ -1,22 +1,26 @@
 ---
 title: "Assignment 5 - Decision Trees"
-author: "Charles Lang"
-date: "November 9, 2016"
+author: "Qiyang (Minnie) Lin"
+date: "November 9, 2019"
 output: html_document
 ---
 For this assignment we will be using data from the Assistments Intelligent Tutoring system. This system gives students hints based on how they perform on math problems. 
 
 #Install & call libraries
 ```{r}
-install.packages("party", "rpart")
+#install.packages("party") 
+#install.packages("rpart")
+#install.packages("rpart.plot")
 
 library(rpart)
 library(party)
+library(rpart.plot)
 ```
 
 ## Part I
 ```{r}
-D1 <- 
+D1 <- read.csv("intelligent_tutor.csv")
+  
 ```
 
 ##Classification Tree
@@ -27,9 +31,11 @@ c.tree <- rpart(action ~ hint.y + complete, method="class", data=D1) #Notice the
 
 #Look at the error of this tree
 printcp(c.tree)
+       #CP: complexity parameter. error will go down when there are more splits. relerror: SSE/RMSE, xerror: cross-validation error, xstd. 
 
 #Plot the tree
 post(c.tree, file = "tree.ps", title = "Session Completion Action: 1 - Ask teacher, 2 - Start new session, 3 - Give up")
+rpart.plot(c.tree)
 
 ```
 ## Part II
@@ -40,25 +46,63 @@ We want to see if we can build a decision tree to help teachers decide which stu
 
 #Visualize our outcome variable "score"
 ```{r}
+hist(D1$score, main = "Score")
 
 ```
 
 #Create a categorical outcome variable based on student score to advise the teacher using an "ifelse" statement
 ```{r}
-D1$advice <- 
+#"no action" if students score > 0.6, "monitor"if students score between 0.3-0.6, "intervention" if students score < 0.3
+
+
+#D1$advice <- if(D1$score > 0.7){"no action"
+#} else if(D1$score > 0.4 && D1$score < 0.7){"monitor"
+#  }else{"intervene"} doesn't work due to length >1 
+
+#D1$advice<- ifelse(D1$score >= 0.7, 
+#                   ifelse(D1$score >= 0.4 && D1$score < 0.7,"monitor","no action"),
+#                          "intervene") doesn't work with the wrong logic. 
+
+
+D1$advice <- with(D1, ifelse(score >= 0.3,
+                    ifelse(score >= 0.6,"no action","monitor"),
+                    "intervene"))
+
+#use with() to avoid metioning df each time. 
+                    
 ```
 
 #Build a decision tree that predicts "advice" based on how many problems students have answered before, the percentage of those problems they got correct and how many hints they required
 ```{r}
-score_ctree <- 
+#outcome ~ predictor1+predictor2+predictor3+ect.
+
+score_ctree <- rpart(advice ~ prior_prob_count + prior_percent_correct +hints, method="class", data=D1)
+  
 ```
 
 #Plot tree
 ```{r}
 
+rpart.plot(score_ctree)
+#https://blog.exploratory.io/visualizing-a-decision-tree-using-r-packages-in-explortory-b26d4cb5e71f
+
+printcp(score_ctree)
+
+#plot(score_ctree)
+
 ```
 
 Please interpret the tree, which two behaviors do you think the teacher should most closely pay attemtion to?
+
+```{r}
+#Interpretation: Depending on whether they had hints over 20, the actions split into two (monitor for 7% and no action for 93%). It means that if a student received hints more or equal to 20 times, 7% chance that teacher shouldn monitor. And if they received hints over 58times, 2% chance that teacher should intervene and 8% should be moniotred. 
+#If they received hints less than 20, 93% chance that teacher should ignore. However, when students got less 20 hints, previous correct less then 60% and got more than 1 hints, 19% of them should be monitored.
+
+#how many hints students got and prior percent correct scores will be two behaviors that teachers should most closely pay attention to. (because they are in the higher hierarchy)
+
+
+```
+
 
 #Test Tree
 Upload the data "intelligent_tutor_new.csv". This is a data set of a differnt sample of students doing the same problems in the same system. We can use the tree we built for the previous data set to try to predict the "advice" we should give the teacher about these new students. 
@@ -66,15 +110,41 @@ Upload the data "intelligent_tutor_new.csv". This is a data set of a differnt sa
 ```{r}
 #Upload new data
 
-D2 <- 
+D2 <- read.csv("intelligent_tutor_new.csv")
 
 #Generate predicted advice using the predict() command for new students based on tree generated from old students
 
-D2$prediction <- 
+#predict(old, new)
+D2$prediction <- predict(score_ctree, D2)
 
 ``` 
 ## Part III
 Compare the predicted advice with the actual advice that these students recieved. What is the difference between the observed and predicted results?
+
+```{r}
+#advice action in D2 obs.data
+D2$advice <- with(D2, ifelse(score >= 0.3,
+                    ifelse(score >= 0.6,"no action","monitor"),
+                    "intervene"))
+#advice from the prediction
+D2$advice_Pred<-with(D2, ifelse(prediction >= 0.3,
+                    ifelse(prediction >= 0.6,"no action","monitor"),
+                    "intervene"))
+
+#compare prediciton action and action.By changing the cutoff score, we want the rel error be higher(it is how we prediction) and xerror (cross validation )be lower
+D2$Accuracy<- ifelse(D2$advice==D2$advice_Pred,1, 0)
+
+#calculate the accuracy of the prediction
+sum(as.numeric(D2$Accuracy))/200
+
+#prediction advice accuracy is 71.5%
+
+
+#0.3-0.6 71.5%
+#0.7-0.8 47%
+
+```
+
 
 ### To Submit Your Assignment
 
