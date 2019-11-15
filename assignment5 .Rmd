@@ -1,0 +1,95 @@
+---
+title: "Assignment5"
+author: "yixiao"
+date: "2019/11/15"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(rpart)
+library(party)
+```
+## Part I
+```{r}
+D1 <- read.csv("intelligent_tutor.csv", header=TRUE)
+```
+
+##Classification Tree
+First we will build a classification tree to predict which students ask a teacher for help, which start a new session, or which give up, based on whether or not the student completed a session (D1\$complete) and whether or not they asked for hints (D1\$hint.y). 
+```{r}
+c.tree <- rpart(action ~ hint.y + complete, method="class", data=D1) #Notice the standard R notion for a formula X ~ Y
+#Look at the error of this tree
+printcp(c.tree)
+#Plot the tree
+post(c.tree, file = "tree.ps", title = "Session Completion Action: 1 - Ask teacher, 2 - Start new session, 3 - Give up")
+```
+
+```{r}
+hist(D1$score)
+```
+
+```{r cars}
+summary(cars)
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+
+
+#Create a categorical outcome variable based on student score to advise the teacher using an "ifelse" statement
+```{r}
+D1$advice <- ifelse(D1$score<=0.4,"intervene",ifelse(D1$score<=0.8, "monitor", "no action"))
+```
+
+#Build a decision tree that predicts "advice" based on how many problems students have answered before, the percentage of those problems they got correct and how many hints they required
+```{r}
+score_ctree <- ctree(as.factor(advice) ~ prior_prob_count+prior_percent_correct+hints,data=D1)
+```
+
+#Plot tree
+```{r}
+plot(score_ctree)
+```
+
+
+# Test Tree
+Upload the data "intelligent_tutor_new.csv". This is a data set of a differnt sample of students doing the same problems in the same system. We can use the tree we built for the previous data set to try to predict the "advice" we should give the teacher about these new students. 
+
+```{r}
+#Upload new data
+D2 <- read.csv("intelligent_tutor_new.csv", header=TRUE)
+#Generate predicted advice using the predict() command for new students based on tree generated from old students
+D2$prediction <- predict(score_ctree,D2)
+``` 
+
+
+## Part III
+Compare the predicted advice with the actual advice that these students recieved. What is the difference between the observed and predicted results?
+
+```{r}
+D3 <- table(D2$prediction)
+D3
+```
+
+### Monitor
+
+```{r}
+D3[2]/sum(D3)
+```
+
+### No action
+
+```{r}
+D3[3]/sum(D3)
+```
+
+
