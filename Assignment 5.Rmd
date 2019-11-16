@@ -8,25 +8,25 @@ For this assignment we will be using data from the Assistments Intelligent Tutor
 
 #Install & call libraries
 ```{r}
-install.packages("party", "rpart")
-
 library(rpart)
 library(party)
 ```
 
 ## Part I
 ```{r}
-D1 <- 
+D1 <- read.csv("~/Documents/GitHub/assignment5/intelligent_tutor.csv", header=TRUE)
 ```
 
 ##Classification Tree
 First we will build a classification tree to predict which students ask a teacher for help, which start a new session, or which give up, based on whether or not the student completed a session (D1$complete) and whether or not they asked for hints (D1$hint.y). 
 ```{r}
-
-c.tree <- rpart(action ~ hint.y + complete, method="class", data=D1) #Notice the standard R notion for a formula X ~ Y
+c.tree <- rpart(action ~ hint.y + complete, method="class", data=D1)
+ #Notice the standard R notion for a formula X ~ Y
 
 #Look at the error of this tree
 printcp(c.tree)
+
+#is root node error the percentage we expect to predict accurately?
 
 #Plot the tree
 post(c.tree, file = "tree.ps", title = "Session Completion Action: 1 - Ask teacher, 2 - Start new session, 3 - Give up")
@@ -40,25 +40,28 @@ We want to see if we can build a decision tree to help teachers decide which stu
 
 #Visualize our outcome variable "score"
 ```{r}
-
+hist(D1$score)
 ```
 
 #Create a categorical outcome variable based on student score to advise the teacher using an "ifelse" statement
 ```{r}
-D1$advice <- 
+D1$advice <- ifelse(D1$score <=0.4, "intervene", ifelse(D1$score > 0.4 & D1$score <=0.8, "monitor", "no action"))
+
 ```
 
 #Build a decision tree that predicts "advice" based on how many problems students have answered before, the percentage of those problems they got correct and how many hints they required
 ```{r}
-score_ctree <- 
+score_ctree <- ctree(factor(advice) ~ prior_prob_count + prior_percent_correct + hints, D1)
 ```
 
 #Plot tree
 ```{r}
-
+plot(score_ctree)
 ```
 
 Please interpret the tree, which two behaviors do you think the teacher should most closely pay attemtion to?
+
+The tree identifies two behaviors of import, the amount of problems students have attempted (prior_prob_count) and the number of hints students have requested. If the prior problems completed is lower or equal to 85, then students are probably not engaging adequately with the program (they may be confused, bored, worth looking into why their problem count is so low). If the amount of hints requested is greater than 12, then students may need more help with the material than they're getting through the system itself. There's also a subgroup worth the teachhers' note, of those who requested 12 or fewer hints, but still have a low percentage of prior questions correct.... With all of this said, it seems those students who request 12 or more hints also probably engaged with more questions, so feels like we should be looking at a ratio of questions answered: questions answered correctly, and questions answered: hints requested. 
 
 #Test Tree
 Upload the data "intelligent_tutor_new.csv". This is a data set of a differnt sample of students doing the same problems in the same system. We can use the tree we built for the previous data set to try to predict the "advice" we should give the teacher about these new students. 
@@ -66,15 +69,20 @@ Upload the data "intelligent_tutor_new.csv". This is a data set of a differnt sa
 ```{r}
 #Upload new data
 
-D2 <- 
+D2 <- read.csv("intelligent_tutor_new.csv", header = TRUE)
 
 #Generate predicted advice using the predict() command for new students based on tree generated from old students
 
-D2$prediction <- 
-
+D2$prediction <- predict(score_ctree, D2)
 ``` 
 ## Part III
 Compare the predicted advice with the actual advice that these students recieved. What is the difference between the observed and predicted results?
+
+```{r}
+mean(ifelse(D2$prediction == "no action", 1, 0))
+```
+
+so 58% of students from this new data set would have recieved no action from the teacher... but in this new data set everyone also has a score of 1, so that seems fine. If you plot plot(D2$prediction, D2$hints) then you see that those recieving the monitoring designation are those who asked for more hints. So if you're just looking to monitor those who seem to need hints in order to answer, then good you've got it. BUT if you look at plot(D2$prediction, D2$prior_percent_correct) then you see that both groups got around the same amount of prior questions correct... so it seems worth looking at students with lower percentages correct, even if they didn't ask for many hints?
 
 ### To Submit Your Assignment
 
