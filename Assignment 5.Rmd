@@ -8,22 +8,24 @@ For this assignment we will be using data from the Assistments Intelligent Tutor
 
 #Install & call libraries
 ```{r}
-install.packages("party", "rpart")
-
+#install.packages("party", "rpart")
+#install.packages("rpart.plot")
 library(rpart)
 library(party)
+library(rpart.plot)
 ```
 
 ## Part I
 ```{r}
-D1 <- 
+D1 <- read.csv("intelligent_tutor.csv", header = TRUE)
 ```
 
 ##Classification Tree
 First we will build a classification tree to predict which students ask a teacher for help, which start a new session, or which give up, based on whether or not the student completed a session (D1$complete) and whether or not they asked for hints (D1$hint.y). 
 ```{r}
 
-c.tree <- rpart(action ~ hint.y + complete, method="class", data=D1) #Notice the standard R notion for a formula X ~ Y
+c.tree <- rpart(action ~ hint.y + complete, method="class", data=D1) 
+#Notice the standard R notion for a formula X ~ Y
 
 #Look at the error of this tree
 printcp(c.tree)
@@ -40,25 +42,28 @@ We want to see if we can build a decision tree to help teachers decide which stu
 
 #Visualize our outcome variable "score"
 ```{r}
-
+plot(D1$score)
 ```
 
 #Create a categorical outcome variable based on student score to advise the teacher using an "ifelse" statement
 ```{r}
-D1$advice <- 
+D1$advice <- ifelse(D1$score %in% 0:0.4, "teacher should intervene",
+                    ifelse(D1$score > 0.4 & D1$score < 0.6, "teacher should monitor student progress", "no action"))
 ```
 
-#Build a decision tree that predicts "advice" based on how many problems students have answered before, the percentage of those problems they got correct and how many hints they required
+#Build a decision tree that predicts "advice" based on how many problems students have answered before(prior_prob_count), the percentage of those problems they got correct(prior_percent_correct) and how many hints they required(hints)
 ```{r}
-score_ctree <- 
+score_ctree <- rpart(as.factor(advice) ~ hints + prior_prob_count + prior_percent_correct, method="class", data=D1)
 ```
 
 #Plot tree
 ```{r}
-
+printcp(score_ctree)
+rpart.plot(score_ctree)
 ```
 
 Please interpret the tree, which two behaviors do you think the teacher should most closely pay attemtion to?
+Teachers should pay attention to those who have answered less than 49 questions and have used hints more than 8 times.
 
 #Test Tree
 Upload the data "intelligent_tutor_new.csv". This is a data set of a differnt sample of students doing the same problems in the same system. We can use the tree we built for the previous data set to try to predict the "advice" we should give the teacher about these new students. 
@@ -66,15 +71,27 @@ Upload the data "intelligent_tutor_new.csv". This is a data set of a differnt sa
 ```{r}
 #Upload new data
 
-D2 <- 
+D2 <- read.csv("intelligent_tutor_new.csv", header = TRUE)
 
 #Generate predicted advice using the predict() command for new students based on tree generated from old students
 
-D2$prediction <- 
+D2$prediction <- predict(score_ctree, D2, type = "class")
+
+D2$observed <- ifelse(D2$score <= 0.4, "teacher should intervene", 
+                     ifelse(D2$score > 0.4 & D2$score < 0.6, "teacher should monitor student progress", "no action"))
 
 ``` 
 ## Part III
 Compare the predicted advice with the actual advice that these students recieved. What is the difference between the observed and predicted results?
+
+Based on the actual score each student has, teachers need no action because the scores are all 1. But when I used the tree built from previous dataset to predict teachers' action, it was shown that several students will need teachers to intervene or monitor. By first creating a table to count each classification and generating a confusion matrix to compute an accuracy measure for classification task and to evaluate the classification performance, I got an accuracy of 0.645. So the tree is able to predict teachers' action in this dataset with an accuracy of 64.5%.
+
+```{r}
+table_mat <- table(D2$observed, D2$prediction)
+table_mat
+accuracy_Test <- sum(diag(table_mat)) / sum(table_mat)
+print(paste('Accuracy for test', accuracy_Test))
+```
 
 ### To Submit Your Assignment
 
