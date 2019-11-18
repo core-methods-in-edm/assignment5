@@ -8,15 +8,18 @@ For this assignment we will be using data from the Assistments Intelligent Tutor
 
 #Install & call libraries
 ```{r}
-install.packages("party", "rpart")
-
+#install.packages("party", "rpart","rattle", "RColorBrewer")
+#install.packages("party", "rpart")
 library(rpart)
 library(party)
+library(rattle)
+library(RColorBrewer)
+
 ```
 
 ## Part I
 ```{r}
-D1 <- 
+D1 <- read.csv("~/R/HUDK/assignment5/intelligent_tutor.csv")
 ```
 
 ##Classification Tree
@@ -31,6 +34,8 @@ printcp(c.tree)
 #Plot the tree
 post(c.tree, file = "tree.ps", title = "Session Completion Action: 1 - Ask teacher, 2 - Start new session, 3 - Give up")
 
+fancyRpartPlot(c.tree, caption = NULL)
+
 ```
 ## Part II
 
@@ -40,22 +45,26 @@ We want to see if we can build a decision tree to help teachers decide which stu
 
 #Visualize our outcome variable "score"
 ```{r}
-
+hist(D1$score)
 ```
 
 #Create a categorical outcome variable based on student score to advise the teacher using an "ifelse" statement
+
+It seems that the distribution of score is "tri-modal". That is, there are 3 groups of students gathered around 3 different score values. We will reccoment "advice" for those students in the middle range, with seems to be bewwwn .3 and .6.
+
 ```{r}
-D1$advice <- 
+D1$advice <- as.factor(ifelse(.3 <D1$score & D1$score <= .6, 1, 0))
 ```
 
 #Build a decision tree that predicts "advice" based on how many problems students have answered before, the percentage of those problems they got correct and how many hints they required
 ```{r}
-score_ctree <- 
+score_ctree <- rpart(advice ~ prior_prob_count + prior_percent_correct + hints, method="class", data=D1)
+  
 ```
 
 #Plot tree
 ```{r}
-
+fancyRpartPlot(score_ctree, caption = NULL)
 ```
 
 Please interpret the tree, which two behaviors do you think the teacher should most closely pay attemtion to?
@@ -63,18 +72,49 @@ Please interpret the tree, which two behaviors do you think the teacher should m
 #Test Tree
 Upload the data "intelligent_tutor_new.csv". This is a data set of a differnt sample of students doing the same problems in the same system. We can use the tree we built for the previous data set to try to predict the "advice" we should give the teacher about these new students. 
 
+ANSWER:
+
+1) Students that ask for any hints. The first behavior teachers should pay attention to is students that ask for any hints. This category includes 42% of the population, and among these, 48% should receive advice.
+
+2) Students whose percentage of prior correct answers is below .6 (among students that asked for hints).Among those students that asked for hints, paying attention to their prior correct answer percentage provides adittional information for teachers about which students are likely to benefit from receiving advice. Among students with prior correct answer rate below .6 AND who have asked for at least one hint, 60% should receive advice. This "dual" category ("at leas 1 hint" + "correct answer rate below .6") includes 37.7% of the total students who should receive advice ( = .22*.6/.35)  
+
 ```{r}
 #Upload new data
 
-D2 <- 
+D2 <- read.csv("~/R/HUDK/assignment5/intelligent_tutor_new.csv")
+D2$advice <- ifelse(.3 <D2$score & D2$score <= .6, 1, 0)
 
 #Generate predicted advice using the predict() command for new students based on tree generated from old students
 
-D2$prediction <- 
-
+D2$prediction <- predict(score_ctree, D2, type = "class")
+  
 ``` 
+
 ## Part III
+
 Compare the predicted advice with the actual advice that these students recieved. What is the difference between the observed and predicted results?
+
+```{r}
+#Upload new data
+
+D2 <- read.csv("~/R/HUDK/assignment5/intelligent_tutor_new.csv")
+D2$advice <- ifelse(D2$score == 1, 0, 1) # Anna told me that for this variable, students coded as "1" should not receive advice, while students coded "0" should (I find this actually very weired since everyone in the dataset has score =1)
+
+#Generate predicted advice using the predict() command for new students based on tree generated from old students
+
+D2$prediction <- predict(score_ctree, D2, type = "class")
+
+# let's build a two-way percentages table to see what we predicted right and wrong
+mytable <- table(as.factor(D2$advice),as.factor(D2$prediction))
+prop.table(mytable)
+``` 
+
+It seems that the new data is very different from our training data, in the sense that in the training data we had 35% of students needing advice, while in the new data 0% of students needed advice. On the other hand, student inputs seem to be more stable (prior_percent_correct, hints, prior_prob_count), leading to a percentage of predicted "in-need-of-adcive-students" of 27%. Overall, our recommendation was "correct" for the 73% of students for whom we did not recommend advice. This is not that much of a good model though, when we compare to simply recommending the "most usual" state (no advice) - if we had done that, we would have got 100% correct recommendations.    
+
+
+
+
+
 
 ### To Submit Your Assignment
 
