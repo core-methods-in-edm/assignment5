@@ -8,15 +8,15 @@ For this assignment we will be using data from the Assistments Intelligent Tutor
 
 #Install & call libraries
 ```{r}
-install.packages("party", "rpart")
-
+library(rpart.plot)
 library(rpart)
 library(party)
 ```
 
 ## Part I
 ```{r}
-D1 <- 
+D1 <- read.csv("~/tmp/assignment5/intelligent_tutor.csv", stringsAsFactors=FALSE)
+D1<-na.omit(D1)
 ```
 
 ##Classification Tree
@@ -25,11 +25,18 @@ First we will build a classification tree to predict which students ask a teache
 
 c.tree <- rpart(action ~ hint.y + complete, method="class", data=D1) #Notice the standard R notion for a formula X ~ Y
 
+
+
 #Look at the error of this tree
 printcp(c.tree)
 
+# cp means the complexity parameter
+
+
 #Plot the tree
 post(c.tree, file = "tree.ps", title = "Session Completion Action: 1 - Ask teacher, 2 - Start new session, 3 - Give up")
+
+rpart.plot(c.tree)
 
 ```
 ## Part II
@@ -41,24 +48,46 @@ We want to see if we can build a decision tree to help teachers decide which stu
 #Visualize our outcome variable "score"
 ```{r}
 
+hist(D1$score)
+
+
 ```
 
 #Create a categorical outcome variable based on student score to advise the teacher using an "ifelse" statement
 ```{r}
-D1$advice <- 
+
+for (i in 1:nrow(D1)){
+  if(as.numeric(D1$score)[i]>=.9){
+    D1$advice[i]<- "No action"
+  }else if(as.numeric(D1$score)[i]<.9){
+    D1$advice[i]<- "Teacher should monitor"
+  }else if(as.numeric(D1$score)[i]<.6){
+    D1$advice[i]<- "Teacher should intervene"
+  }
+}
+
+D1$advice<-as.character(D1$advice)
+
 ```
 
 #Build a decision tree that predicts "advice" based on how many problems students have answered before, the percentage of those problems they got correct and how many hints they required
 ```{r}
-score_ctree <- 
+
+score_tree <- rpart(advice ~ prior_prob_count + prior_percent_correct + hints, method="class", data=D1) #Notice the standard R notion for a formula X ~ Y 
+
 ```
 
 #Plot tree
 ```{r}
+printcp(score_tree)
+rpart.plot(score_tree)
+post(c.tree, file = "tree2.ps", title = "Session Completion Action: 1 - Ask teacher, 2 - Start new session, 3 - Give up")
 
 ```
 
-Please interpret the tree, which two behaviors do you think the teacher should most closely pay attemtion to?
+Please interpret the tree, which two behaviors do you think the teacher should most closely pay attention to?
+
+Based on the generated plot, it seems as though the most powerful predictors of whether or not a student will receive feedback of some sort is whether they hace received such hunts in the past. If a student has not received many hints, and falls within a narrow stretch of students that either had mid to high mid scores and completed a certain amount of problems would the program suggest that we give them some form of advice. 
 
 #Test Tree
 Upload the data "intelligent_tutor_new.csv". This is a data set of a differnt sample of students doing the same problems in the same system. We can use the tree we built for the previous data set to try to predict the "advice" we should give the teacher about these new students. 
@@ -66,15 +95,45 @@ Upload the data "intelligent_tutor_new.csv". This is a data set of a differnt sa
 ```{r}
 #Upload new data
 
-D2 <- 
+D2 <- read.csv("~/tmp/assignment5/intelligent_tutor.csv", stringsAsFactors=FALSE)
 
 #Generate predicted advice using the predict() command for new students based on tree generated from old students
 
-D2$prediction <- 
+D2$prediction <- predict(score_tree, D2, type = "class")
 
 ``` 
 ## Part III
 Compare the predicted advice with the actual advice that these students recieved. What is the difference between the observed and predicted results?
+```{r}
+for (i in 1:nrow(D2)){
+  if(as.numeric(D2$score)[i]>=.9){
+    D2$advice[i]<- "No action"
+  }else if(as.numeric(D2$score)[i]<.9){
+    D2$advice[i]<- "Teacher should monitor"
+  }else if(as.numeric(D2$score)[i]<.6){
+    D2$advice[i]<- "Teacher should intervene"
+  }
+}
+
+for (i in 1:nrow(D2)){
+  if(D2$prediction[i]==D2$advice[i]){
+    D2$match[i]<-"Y"
+  }else{
+    D2$match[i]<-"N"
+  }
+}
+
+library(dplyr)
+D3<-D2 %>%
+  group_by(match)%>%
+  count(match)%>%
+  summarise(match/nrow(D3$match))
+
+
+
+```
+
+A review of D3 showed that we were able to accurately predict 311 times, or 83.4% of the time. 16.6% of the time, we made an inaccruate a prediction. A review of the instances in which our prediction algorithm generated errors reveals that it weighed very heavily the completion of problems and having a higher prior problems correct; students who found the class to be easy and went straight to the assessment had no such values (and were scored at 0); so even though a teacher would just leave them be, our algorithm would not detect that and would recommend that the teacher monitor. Ironically, this is in my opinion good practice; a summative assessment is not necessarily the best tool for misconceptions.
 
 ### To Submit Your Assignment
 
