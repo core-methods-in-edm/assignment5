@@ -1,6 +1,6 @@
 ---
 title: "Assignment 5 - Decision Trees"
-author: "Charles Lang"
+author: "Bozi Jin"
 date: "November 9, 2016"
 output: html_document
 ---
@@ -8,6 +8,10 @@ For this assignment we will be using data from the Assistments Intelligent Tutor
 
 #Install & call libraries
 ```{r}
+library(rpart)
+library(party)
+library(rpart.plot)
+```
 install.packages("party", "rpart")
 
 library(rpart)
@@ -16,13 +20,13 @@ library(party)
 
 ## Part I
 ```{r}
-D1 <- 
+D1 <- read.csv("intelligent_tutor.csv",header=TRUE)
 ```
+
 
 ##Classification Tree
 First we will build a classification tree to predict which students ask a teacher for help, which start a new session, or which give up, based on whether or not the student completed a session (D1$complete) and whether or not they asked for hints (D1$hint.y). 
 ```{r}
-
 c.tree <- rpart(action ~ hint.y + complete, method="class", data=D1) #Notice the standard R notion for a formula X ~ Y
 
 #Look at the error of this tree
@@ -32,7 +36,9 @@ printcp(c.tree)
 post(c.tree, file = "tree.ps", title = "Session Completion Action: 1 - Ask teacher, 2 - Start new session, 3 - Give up")
 
 ```
+
 ## Part II
+
 
 #Regression Tree
 
@@ -40,22 +46,26 @@ We want to see if we can build a decision tree to help teachers decide which stu
 
 #Visualize our outcome variable "score"
 ```{r}
+boxplot(D1$score,axes = FALSE,staplewex = 1)
+text(y=boxplot.stats(D1$score)$stats, labels = boxplot.stats(D1$score)$stats,x=1.4)
+hist(D1$score)
 
 ```
 
 #Create a categorical outcome variable based on student score to advise the teacher using an "ifelse" statement
 ```{r}
-D1$advice <- 
+D1$advice <- ifelse(D1$score>=0.8,1,ifelse(D1$score<=0.5,3,2))
+D1$advice<-as.factor(D1$advice)
 ```
 
 #Build a decision tree that predicts "advice" based on how many problems students have answered before, the percentage of those problems they got correct and how many hints they required
 ```{r}
-score_ctree <- 
+score_ctree <- ctree(advice ~ prior_prob_count+prior_percent_correct+hints,data = D1)
 ```
 
 #Plot tree
 ```{r}
-
+plot(score_ctree)
 ```
 
 Please interpret the tree, which two behaviors do you think the teacher should most closely pay attemtion to?
@@ -65,16 +75,22 @@ Upload the data "intelligent_tutor_new.csv". This is a data set of a differnt sa
 
 ```{r}
 #Upload new data
-
-D2 <- 
+library(dplyr)
+D2 <- read.csv("intelligent_tutor_new.csv")
 
 #Generate predicted advice using the predict() command for new students based on tree generated from old students
 
-D2$prediction <- 
+D2$prediction <-predict(score_ctree,D2)
 
 ``` 
 ## Part III
 Compare the predicted advice with the actual advice that these students recieved. What is the difference between the observed and predicted results?
+```{r}
+D2$advice <- ifelse(D2$score>=0.8,1,ifelse(D2$score<=0.5,3,2))
+accuracy<-nrow(filter(D2,prediction==1))/nrow(D2)
+
+```
+
 
 ### To Submit Your Assignment
 
