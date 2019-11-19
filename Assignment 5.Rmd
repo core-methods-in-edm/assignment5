@@ -8,28 +8,32 @@ For this assignment we will be using data from the Assistments Intelligent Tutor
 
 #Install & call libraries
 ```{r}
-install.packages("party", "rpart")
+#install.packages("party", "rpart")
+# we have to library the pacage we installed 
 
 library(rpart)
+
 library(party)
 ```
 
 ## Part I
 ```{r}
-D1 <- 
+#we read the file and name it D1
+D1 <- read.csv("intelligent_tutor.csv")
+
 ```
 
 ##Classification Tree
 First we will build a classification tree to predict which students ask a teacher for help, which start a new session, or which give up, based on whether or not the student completed a session (D1$complete) and whether or not they asked for hints (D1$hint.y). 
 ```{r}
-
+#get the tree for classfied data 
 c.tree <- rpart(action ~ hint.y + complete, method="class", data=D1) #Notice the standard R notion for a formula X ~ Y
 
 #Look at the error of this tree
 printcp(c.tree)
 
 #Plot the tree
-post(c.tree, file = "tree.ps", title = "Session Completion Action: 1 - Ask teacher, 2 - Start new session, 3 - Give up")
+post(c.tree, file = "", title = "Session Completion Action: 1 - Ask teacher, 2 - Start new session, 3 - Give up")
 
 ```
 ## Part II
@@ -40,23 +44,44 @@ We want to see if we can build a decision tree to help teachers decide which stu
 
 #Visualize our outcome variable "score"
 ```{r}
-
+#use the funcation we have 
+hist(D1$score)
 ```
 
 #Create a categorical outcome variable based on student score to advise the teacher using an "ifelse" statement
 ```{r}
-D1$advice <- 
+# we could get a the students score from the 0.4 to the 0.6
+#also we have to know how many people between the 0.4 to 0.6
+
+D1$advice <-ifelse(D1$score > 0.4, ifelse(D1$score>0.6,"ignore","monitor"),"intervenue") 
+
 ```
 
 #Build a decision tree that predicts "advice" based on how many problems students have answered before, the percentage of those problems they got correct and how many hints they required
 ```{r}
-score_ctree <- 
+#we have to create the tree plot and see the data 
+
+grade_ctree <- rpart(advice ~ prior_prob_count + prior_percent_correct +hints, method = "class", data = D1)
+
 ```
+
 
 #Plot tree
 ```{r}
+#we gonna have a post tree condition
 
+post(grade_ctree,file="grade_tree.ps", title = "session completion advice - intervenue, 2 - monitor pregress, 3 - no action")
+
+plot(grade_ctree,compress= TRUE)
+
+text(grade_ctree,use.n = TRUE)
+
+# we have to package the function called rpart.plot
+
+library(rpart.plot)
+rpart.plot(grade_ctree)
 ```
+
 
 Please interpret the tree, which two behaviors do you think the teacher should most closely pay attemtion to?
 
@@ -66,17 +91,50 @@ Upload the data "intelligent_tutor_new.csv". This is a data set of a differnt sa
 ```{r}
 #Upload new data
 
-D2 <- 
+D2 <- read.csv("intelligent_tutor_new.csv")
 
 #Generate predicted advice using the predict() command for new students based on tree generated from old students
 
-D2$prediction <- 
+D2$prediction <- predict(grade_ctree,D2)
+
 
 ``` 
 ## Part III
 Compare the predicted advice with the actual advice that these students recieved. What is the difference between the observed and predicted results?
 
 ### To Submit Your Assignment
+
+```{r}
+
+# our obersve
+
+
+#AS THE data shows, 
+# I find the ingore : 58% + 15% + 11% = 84%
+# the monitor shows : 4%
+# the intervenue 7% + 4% = 11%
+
+
+# predicted way we shows:
+
+the_max_data<- apply(D2$prediction,1,which.max)
+
+#we get the no action way:
+
+sum(the_max_data == 3)/length(the_max_data)
+
+# the monitor data we have:
+
+sum(the_max_data == 2)/ length(the_max_data)
+
+#the interventue:
+
+sum(the_max_data == 1)/length(the_max_data)
+
+
+# I actually find the data we I compare, quickly different with the results
+```
+
 
 Please submit your assignment by first "knitting" your RMarkdown document into an html file and then commit, push and pull request both the RMarkdown file and the html file.
 
