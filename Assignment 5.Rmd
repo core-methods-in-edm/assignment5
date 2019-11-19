@@ -8,15 +8,14 @@ For this assignment we will be using data from the Assistments Intelligent Tutor
 
 #Install & call libraries
 ```{r}
-install.packages("party", "rpart")
-
 library(rpart)
 library(party)
+library(tidyverse)
 ```
 
 ## Part I
 ```{r}
-D1 <- 
+D1 <- read.csv(file = "intelligent_tutor.csv", header = TRUE) 
 ```
 
 ##Classification Tree
@@ -40,25 +39,34 @@ We want to see if we can build a decision tree to help teachers decide which stu
 
 #Visualize our outcome variable "score"
 ```{r}
+library(ggplot2)
 
+D1 %>%
+  gather(-score, key = "var", value = "value") %>%
+  ggplot(aes(x = value, y = score)) +
+    geom_point() +
+    facet_wrap(~ var, scales = "free") 
 ```
 
 #Create a categorical outcome variable based on student score to advise the teacher using an "ifelse" statement
 ```{r}
-D1$advice <- 
+D1$advice <- cut(D1$score,3,labels=c("1","2","3"))
+D1$advice
 ```
 
 #Build a decision tree that predicts "advice" based on how many problems students have answered before, the percentage of those problems they got correct and how many hints they required
 ```{r}
-score_ctree <- 
+score_ctree <- ctree(advice ~ prior_prob_count + prior_percent_correct + hints, data=D1)
 ```
 
 #Plot tree
 ```{r}
-
+plot(score_ctree, main="Teacher Advice: 1-Intervene, 2-Monitor, 3-No action")
 ```
 
 Please interpret the tree, which two behaviors do you think the teacher should most closely pay attemtion to?
+
+Teachers need to pay attention to the number of hints and the prior percentage of correct answers. If students needed fewer hints but had a low correct percent, they need teacher's intervention. If students need a lot of hints, they need to be monitered or intervened. 
 
 #Test Tree
 Upload the data "intelligent_tutor_new.csv". This is a data set of a differnt sample of students doing the same problems in the same system. We can use the tree we built for the previous data set to try to predict the "advice" we should give the teacher about these new students. 
@@ -66,15 +74,19 @@ Upload the data "intelligent_tutor_new.csv". This is a data set of a differnt sa
 ```{r}
 #Upload new data
 
-D2 <- 
+D2 <- read.csv(file = "intelligent_tutor_new.csv", header = TRUE)
 
 #Generate predicted advice using the predict() command for new students based on tree generated from old students
 
-D2$prediction <- 
-
+D2$prediction <- predict(score_ctree, newdata = D2)
 ``` 
 ## Part III
 Compare the predicted advice with the actual advice that these students recieved. What is the difference between the observed and predicted results?
+```{r}
+D2$advice <- cut(D2$score,3,labels=c("1","2","3"))
+
+#All the student scores are 1 in this dataset, so teachers do not intervene. The prediction says teacher will intervene for many students. 
+```
 
 ### To Submit Your Assignment
 
