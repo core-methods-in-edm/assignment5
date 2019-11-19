@@ -1,26 +1,23 @@
 ---
 title: "Assignment 5 - Decision Trees"
-author: "Charles Lang"
-date: "November 9, 2016"
+author: "Joellyn Heng"
+date: "19 November 2019"
 output: html_document
 ---
 For this assignment we will be using data from the Assistments Intelligent Tutoring system. This system gives students hints based on how they perform on math problems. 
 
-#Install & call libraries
-```{r}
-install.packages("party", "rpart")
-
+```{r, include= FALSE}
 library(rpart)
 library(party)
 ```
 
 ## Part I
 ```{r}
-D1 <- 
+D1 <- read.csv("intelligent_tutor.csv")
 ```
 
-##Classification Tree
-First we will build a classification tree to predict which students ask a teacher for help, which start a new session, or which give up, based on whether or not the student completed a session (D1$complete) and whether or not they asked for hints (D1$hint.y). 
+### Classification Tree
+First we will build a classification tree to predict which students ask a teacher for help, which start a new session, or which give up, based on whether or not the student completed a session (D1\$complete) and whether or not they asked for hints (D1\$hint.y). 
 ```{r}
 
 c.tree <- rpart(action ~ hint.y + complete, method="class", data=D1) #Notice the standard R notion for a formula X ~ Y
@@ -34,49 +31,73 @@ post(c.tree, file = "tree.ps", title = "Session Completion Action: 1 - Ask teach
 ```
 ## Part II
 
-#Regression Tree
+### Regression Tree
 
 We want to see if we can build a decision tree to help teachers decide which students to follow up with, based on students' performance in Assistments. We will create three groups ("teacher should intervene", "teacher should monitor student progress" and "no action") based on students' previous use of the system and how many hints they use. To do this we will be building a decision tree using the "party" package. The party package builds decision trees based on a set of statistical stopping rules.
 
-#Visualize our outcome variable "score"
+#### Visualize our outcome variable "score"
 ```{r}
+hist(D1$score)
+```
+
+#### Create a categorical outcome variable based on student score to advise the teacher using an "ifelse" statement
+
+This creation of categorical outcome variable means we are deciding on advice to teacher based on an arbitrary split in students' scores. For this, I have taken score < 0.5 to be group 1 "teacher should intervene", score < 0.6 to be group 2 "teacher should monitor progress" and  0.6 =< score =< 1 to be group 3 "no action". Note: We are disregarding the actual action for teacher denoted by "action" in the codebook.
+
+```{r}
+
+D1$advice <- ifelse(D1$score < 0.5, "1", ifelse(D1$score < 0.6, "2", "3"))
+
+D1$advice <- as.factor(D1$advice) 
 
 ```
 
-#Create a categorical outcome variable based on student score to advise the teacher using an "ifelse" statement
-```{r}
-D1$advice <- 
-```
+#### Build a decision tree that predicts "advice" based on how many problems students have answered before, the percentage of those problems they got correct and how many hints they required
 
-#Build a decision tree that predicts "advice" based on how many problems students have answered before, the percentage of those problems they got correct and how many hints they required
 ```{r}
-score_ctree <- 
-```
 
-#Plot tree
-```{r}
+score_ctree <- ctree(advice ~ prior_prob_count + prior_percent_correct + hints,  data=D1)
 
 ```
 
-Please interpret the tree, which two behaviors do you think the teacher should most closely pay attemtion to?
+#### Plot tree
+```{r}
+plot(score_ctree)
+```
 
-#Test Tree
+#### Please interpret the tree, which two behaviors do you think the teacher should most closely pay attemtion to?
+
+The teacher should pay most attention to whether students ask in the current session less or more than 22 hints in the current session, as Node 5 is primarily made up of group 1 = "teacher should intervene". The teacher should also pay attention to whether students answered less or more than 70% of questions correct in the previous session, as it splits up groups 2 and 3 between Nodes 3 (higher proportion of group 3) and 4 (higher proportion of group 1). However, the behavior denoted by prior_prob_count, which is the number of problems a student has done in the system prior to the current session is not an important behaviour in distinguishing this group.
+
+#### Test Tree
 Upload the data "intelligent_tutor_new.csv". This is a data set of a differnt sample of students doing the same problems in the same system. We can use the tree we built for the previous data set to try to predict the "advice" we should give the teacher about these new students. 
 
 ```{r}
 #Upload new data
 
-D2 <- 
+D2 <- read.csv("intelligent_tutor_new.csv")
 
 #Generate predicted advice using the predict() command for new students based on tree generated from old students
 
-D2$prediction <- 
+D2$advice <- ifelse(D2$score < 0.5, "1", ifelse(D2$score < 0.6, "2", "3"))
+
+D2$advice_predict <- predict(score_ctree, newdata = D2[,2:4])
 
 ``` 
 ## Part III
 Compare the predicted advice with the actual advice that these students recieved. What is the difference between the observed and predicted results?
 
-### To Submit Your Assignment
+```{r difference using confusion matrix}
 
-Please submit your assignment by first "knitting" your RMarkdown document into an html file and then commit, push and pull request both the RMarkdown file and the html file.
+#confusion matrix for D2 (test set)
+table(D2$advice, D2$advice_predict, dnn = c("Actual advice", "Predicted advice"))
 
+#confusion matrix for D1 (training set)
+D1$advice_predict <- predict(score_ctree)
+table(D1$advice, D1$advice_predict, dnn = c("Actual advice", "Predicted advice"))
+
+```
+
+Based on the confusion matrix, we can see that the error in our prediction on this test set (based on the decision tree model built using our training set) has classified 15 out of the sample size of 200 wrongly. The actual advice based on the scores of students (all being full score of "1") would be to take "no action" for all students. However, the model has classified 15 of them into "teacher should intervene", based on the variables prior_prob_count, prior_percent_correct and hints.
+
+Comparing to the confusion matrix on our training model, it can be seen that this decision tree model is indeed better at classifying groups 2 "teacher should monitor" and 3 "no action" (with 3 being the best), and does not perform well in classifying group 1 "teacher should intervene".
