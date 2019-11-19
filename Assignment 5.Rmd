@@ -83,9 +83,10 @@ D2$prediction <- predict(score_ctree, newdata = D2)
 ## Part III
 Compare the predicted advice with the actual advice that these students recieved. What is the difference between the observed and predicted results?
 ```{r}
-D2$advice <- cut(D2$score,3,labels=c("1","2","3"))
-
-#All the student scores are 1 in this dataset, so teachers do not intervene. The prediction says teacher will intervene for many students. 
+#All the student scores are 1 in this dataset, so teachers do not intervene.
+D2$advice <- 3
+test_accuracy <- sum(D2$prediction == D2$advice)/length(D2$advice)
+test_accuracy
 ```
 
 ### To Submit Your Assignment
