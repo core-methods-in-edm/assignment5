@@ -60,6 +60,8 @@ plot(score_ctree)
 
 Please interpret the tree, which two behaviors do you think the teacher should most closely pay attemtion to?
 
+#I think teahcer should pay most attension to Node8 and Node 3. Teachers should pay more attension on these kids who get middle grade. These kids are not doing so well as kids in Node4, and not get attension as kid in Node4.
+
 #Test Tree
 Upload the data "intelligent_tutor_new.csv". This is a data set of a differnt sample of students doing the same problems in the same system. We can use the tree we built for the previous data set to try to predict the "advice" we should give the teacher about these new students. 
 
