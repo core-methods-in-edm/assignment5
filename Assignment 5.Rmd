@@ -8,8 +8,8 @@ For this assignment we will be using data from the Assistments Intelligent Tutor
 
 #Install & call libraries
 ```{r}
-install.packages("party")
-install.packages("rpart")
+##install.packages("party")
+##install.packages("rpart")
 
 library(rpart)
 library(party)
@@ -60,11 +60,11 @@ score_ctree <- ctree(factor(advice) ~ prior_prob_count + hints, data = D1)
 #Plot tree
 ```{r}
 plot(score_ctree)
-post(score_ctree, file = "score_tree.ps", title = "Action: 1 - teacher should intervene, 2 - teacher should monitor student progress, 3 - no action")
+plot(score_ctree, file = "score_tree.ps", title = "Action: 1 - teacher should intervene, 2 - teacher should monitor student progress, 3 - no action")
 ```
 
 Please interpret the tree, which two behaviors do you think the teacher should most closely pay attemtion to?
-*****A:
+A: Teachers need to pay attention to students who have used hints and students who have not used hints but the number of their previous problems is equal to or less than 89, which are node 5 and node 3. There are two reasons. First, almost all the students from node 5 need teachers' attention, either intervention or monitor. Moreover, students who need intervention have a relatively high proportion in node 5 than other groups (i.e., around 0.3). Second, around 60 percent of students from node 3 need teachers' attention.
 
 
 #Test Tree
@@ -90,8 +90,7 @@ cor <- 1  - error
 ``` 
 ## Part III
 Compare the predicted advice with the actual advice that these students recieved. What is the difference between the observed and predicted results?
-******A: 
-
+A: The actual advice for test data is that teachers do not have to generate any action for these students. However, the predicted advice showed that 157 out of 200 students need to be monitored. Based on this difference, we could calculate that the accuracy of our tree is 0.215 and that the error rate is 0.785. Therefore, we should modify our tree model to improve accuracy.
 
 
 ### To Submit Your Assignment
