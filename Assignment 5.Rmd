@@ -43,7 +43,7 @@ hist(D1$score)
 
 #Create a categorical outcome variable based on student score to advise the teacher using an "ifelse" statement
 
-***"We will create three groups 
+###"We will create three groups 
 ("teacher should intervene", 
 "teacher should monitor student progress" 
 and "no action")"
