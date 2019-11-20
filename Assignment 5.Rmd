@@ -61,7 +61,7 @@ plot(score_ctree)
 ```
 
 Please interpret the tree, which two behaviors do you think the teacher should most closely pay attemtion to?
-
+The teacher should pat attention to prior_prob_count and hints, since they are two deteermining factors in the graph.
 #Test Tree
 Upload the data "intelligent_tutor_new.csv". This is a data set of a differnt sample of students doing the same problems in the same system. We can use the tree we built for the previous data set to try to predict the "advice" we should give the teacher about these new students. 
 
@@ -81,7 +81,7 @@ Compare the predicted advice with the actual advice that these students recieved
 D2$advice <- ifelse(D2$score>=0.8,1,ifelse(D2$score<=0.5,3,2))
 accuracy<-nrow(filter(D2,prediction==1))/nrow(D2)
 
-#The predicted score is 65% accurate. 
+#The predicted score is 65% accurate. The model is too generalized we can have more variables add to the graph. The error rate is 35%.
 ```
 
 ### To Submit Your Assignment
