@@ -409,9 +409,9 @@ printcp(c.tree)</code></pre>
 ## n= 378 
 ## 
 ##      CP nsplit rel error xerror     xstd
-## 1 0.052      0     1.000  1.096 0.034730
-## 2 0.012      1     0.948  1.024 0.036359
-## 3 0.010      2     0.936  0.972 0.037264</code></pre>
+## 1 0.052      0     1.000  1.088 0.034934
+## 2 0.012      1     0.948  1.048 0.035867
+## 3 0.010      2     0.936  0.996 0.036873</code></pre>
 <pre class="r"><code>#Plot the tree
 post(c.tree, file = &quot;tree.ps&quot;, title = &quot;Session Completion Action: 1 - Ask teacher, 2 - Start new session, 3 - Give up&quot;)
 
@@ -445,7 +445,7 @@ D2 &lt;- read.csv(&quot;intelligent_tutor_new.csv&quot;)
 
 #Generate predicted advice using the predict() command for new students based on tree generated from old students
 
-D2$prediction &lt;- predict(score_ctree,D2)</code></pre>
+D2$prediction &lt;- predict(score_ctree,D2, &quot;class&quot;)</code></pre>
 </div>
 <div id="part-iii" class="section level2">
 <h2>Part III</h2>
@@ -457,15 +457,15 @@ D2$prediction &lt;- predict(score_ctree,D2)</code></pre>
 # Intervene: 2%
 
 # Predicted
-D3 &lt;- apply(D2$prediction,1,which.max)
+
 # No Action
-sum(D3 == 3) / length(D3) # 64.5%</code></pre>
+sum(D2$prediction == &quot;No Action&quot;) / nrow(D2) # 64.5%</code></pre>
 <pre><code>## [1] 0.645</code></pre>
 <pre class="r"><code># Monitor Progress
-sum(D3 == 2) / length(D3) # 34.5%</code></pre>
+sum(D2$prediction == &quot;Monitor Progress&quot;) / nrow(D2) # 34.5%</code></pre>
 <pre><code>## [1] 0.345</code></pre>
 <pre class="r"><code># Intervene
-sum(D3 == 1) / length(D3) # 0.01%</code></pre>
+sum(D2$prediction == &quot;Intervene&quot;) / nrow(D2) # 0.01%</code></pre>
 <pre><code>## [1] 0.01</code></pre>
 <div id="to-submit-your-assignment" class="section level3">
 <h3>To Submit Your Assignment</h3>

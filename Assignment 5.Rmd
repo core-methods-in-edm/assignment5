@@ -84,8 +84,7 @@ D2 <- read.csv("intelligent_tutor_new.csv")
 
 #Generate predicted advice using the predict() command for new students based on tree generated from old students
 
-D2$prediction <- predict(score_ctree,D2)
-
+D2$prediction <- predict(score_ctree,D2, "class")
 ``` 
 ## Part III
 Compare the predicted advice with the actual advice that these students recieved. What is the difference between the observed and predicted results?
@@ -99,13 +98,13 @@ The following results show that the predicted "no action" is less than the one o
 # Intervene: 2%
 
 # Predicted
-D3 <- apply(D2$prediction,1,which.max)
+
 # No Action
-sum(D3 == 3) / length(D3) # 64.5%
+sum(D2$prediction == "No Action") / nrow(D2) # 64.5%
 # Monitor Progress
-sum(D3 == 2) / length(D3) # 34.5%
+sum(D2$prediction == "Monitor Progress") / nrow(D2) # 34.5%
 # Intervene
-sum(D3 == 1) / length(D3) # 0.01%
+sum(D2$prediction == "Intervene") / nrow(D2) # 0.01%
 
 ```
 
