@@ -96,19 +96,24 @@ Upload the data "intelligent_tutor_new.csv". This is a data set of a differnt sa
 D2 <- read.csv("intelligent_tutor_new.csv")
 
 # Generate predictions on a test set
-pred <- predict(object = score_ctree, newdata = D2, type = "class")
-pred <- as.factor(pred)
-D2$prediction <- pred
+D2$prediction <- predict(object = score_ctree, newdata = D2, type = "class")
+
+# Generate the actual values
+D2$actual <- ifelse(D2$score>=.8, "no action", 
+                    ifelse(D2$score<.8 & D2$score>=.6, "monitor", "intervene"))
 ``` 
 
 ## Part III
 Compare the predicted advice with the actual advice that these students recieved. What is the difference between the observed and predicted results?  
 
-
+All observed results only have one level - "no action" since all scores are 1, while predicted results have three levels - "no action", "monitor", "intervene".
 
 ```{r}
+# Table
+table(D2$prediction, D2$actual)
+
 # Calculate the confusion matrix for the test set
-#confusionMatrix(D2$prediction, D1$advice)
+#confusionMatrix(data = as.factor(D2$prediction), reference = as.factor(D2$actual))
 ```
 
 
