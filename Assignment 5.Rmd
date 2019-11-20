@@ -8,15 +8,16 @@ For this assignment we will be using data from the Assistments Intelligent Tutor
 
 #Install & call libraries
 ```{r}
-install.packages("party", "rpart")
+#install.packages("party", "rpart", "rpart.plot")
 
 library(rpart)
+library(rpart.plot)
 library(party)
 ```
 
 ## Part I
 ```{r}
-D1 <- 
+D1 <- read.csv("intelligent_tutor.csv")
 ```
 
 ##Classification Tree
@@ -31,6 +32,11 @@ printcp(c.tree)
 #Plot the tree
 post(c.tree, file = "tree.ps", title = "Session Completion Action: 1 - Ask teacher, 2 - Start new session, 3 - Give up")
 
+plot(c.tree, compress = TRUE)
+text(c.tree, use.n = TRUE)
+
+rpart.plot(c.tree)
+
 ```
 ## Part II
 
@@ -40,25 +46,33 @@ We want to see if we can build a decision tree to help teachers decide which stu
 
 #Visualize our outcome variable "score"
 ```{r}
-
+hist(D1$score)
 ```
 
 #Create a categorical outcome variable based on student score to advise the teacher using an "ifelse" statement
 ```{r}
-D1$advice <- 
+D1$advice <- ifelse(D1$score < 0.3, "Intervene", ifelse(D1$score < 0.6, "Monitor Progress", "No Action"))
 ```
 
 #Build a decision tree that predicts "advice" based on how many problems students have answered before, the percentage of those problems they got correct and how many hints they required
 ```{r}
-score_ctree <- 
+score_ctree <- rpart(advice ~ prior_prob_count + prior_percent_correct + hints, method="class", data=D1)
 ```
 
 #Plot tree
 ```{r}
+post(score_ctree, file = "score_tree.ps", title = "Session Completion Advice: 1 - Intervene, 2 - Monitor Progress, 3 - No Action")
 
+plot(score_ctree, compress = TRUE)
+text(score_ctree, use.n = TRUE)
+
+rpart.plot(score_ctree)
 ```
 
 Please interpret the tree, which two behaviors do you think the teacher should most closely pay attemtion to?
+1. hints >= 58
+2. prior_percent_corect < 0.6
+
 
 #Test Tree
 Upload the data "intelligent_tutor_new.csv". This is a data set of a differnt sample of students doing the same problems in the same system. We can use the tree we built for the previous data set to try to predict the "advice" we should give the teacher about these new students. 
@@ -66,15 +80,34 @@ Upload the data "intelligent_tutor_new.csv". This is a data set of a differnt sa
 ```{r}
 #Upload new data
 
-D2 <- 
+D2 <- read.csv("intelligent_tutor_new.csv")
 
 #Generate predicted advice using the predict() command for new students based on tree generated from old students
 
-D2$prediction <- 
-
+D2$prediction <- predict(score_ctree,D2, "class")
 ``` 
 ## Part III
 Compare the predicted advice with the actual advice that these students recieved. What is the difference between the observed and predicted results?
+
+The following results show that the predicted "no action" is less than the one observed, the "monitor progress" number is more than the observed number, and there is no student need to be intervened. I feel that the predicted one is more centralized since the middle choice - "monitor progress" is more than the observed one. 
+```{r}
+
+# Observed
+# No Action: 34% + 39% = 73%
+# Monitor Progress: 6% + 19% = 25%
+# Intervene: 2%
+
+# Predicted
+
+# No Action
+sum(D2$prediction == "No Action") / nrow(D2) # 64.5%
+# Monitor Progress
+sum(D2$prediction == "Monitor Progress") / nrow(D2) # 34.5%
+# Intervene
+sum(D2$prediction == "Intervene") / nrow(D2) # 0.01%
+
+```
+
 
 ### To Submit Your Assignment
 
