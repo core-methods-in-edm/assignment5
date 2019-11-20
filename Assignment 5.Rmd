@@ -1,80 +1,122 @@
 ---
 title: "Assignment 5 - Decision Trees"
-author: "Charles Lang"
-date: "November 9, 2016"
-output: html_document
+author: "Minruo Wang"
+date: "November 19, 2019"
+output: 
+  html_document:
+    toc: true
 ---
 For this assignment we will be using data from the Assistments Intelligent Tutoring system. This system gives students hints based on how they perform on math problems. 
 
 #Install & call libraries
-```{r}
-install.packages("party", "rpart")
+```{r, results = 'hide'}
+#install.packages("party", "rpart")
 
 library(rpart)
 library(party)
+library(rpart.plot)
+library(caret)
 ```
 
 ## Part I
 ```{r}
-D1 <- 
+D1 <- read.csv("intelligent_tutor.csv")
 ```
 
-##Classification Tree
-First we will build a classification tree to predict which students ask a teacher for help, which start a new session, or which give up, based on whether or not the student completed a session (D1$complete) and whether or not they asked for hints (D1$hint.y). 
+### Classification Tree  
+First we will build a classification tree to predict which students ask a teacher for help, which start a new session, or which give up, based on whether or not the student completed a session (D1$complete) and whether or not they asked for hints (D1$hint.y).  
+
+- Outcome: student actions (3 categories);  
+
+- Predictor: Completeness of a session, Hints.  
+
 ```{r}
+# Create the model
+c.tree <- rpart(formula = action ~ hint.y + complete,  data = D1, method = "class") 
+# Notice the standard R notion for a formula: Y ~ X1 + X2 + X3
 
-c.tree <- rpart(action ~ hint.y + complete, method="class", data=D1) #Notice the standard R notion for a formula X ~ Y
+# Look at the error of this tree: 
+printcp(c.tree)  # c.tree$cptable
+# CP = complexity parameter, panelty term to control tree size. 
+# The smaller CP, the more complex (the greater the no. of splits)
+# cptable: a matrix of information on the optimal prunings based on a complexity parameter
 
-#Look at the error of this tree
-printcp(c.tree)
+# Plot the cross-validated error across different values of CP
+plotcp(c.tree)
+# optimal value of CP = the one minimize xerror
+# then you can tune/trim the model using prune()
 
-#Plot the tree
+# Plot the tree
 post(c.tree, file = "tree.ps", title = "Session Completion Action: 1 - Ask teacher, 2 - Start new session, 3 - Give up")
 
-```
-## Part II
-
-#Regression Tree
-
-We want to see if we can build a decision tree to help teachers decide which students to follow up with, based on students' performance in Assistments. We will create three groups ("teacher should intervene", "teacher should monitor student progress" and "no action") based on students' previous use of the system and how many hints they use. To do this we will be building a decision tree using the "party" package. The party package builds decision trees based on a set of statistical stopping rules.
-
-#Visualize our outcome variable "score"
-```{r}
-
+# Another plot
+rpart.plot(x = c.tree, yesno = 2, type = 0, extra = 0, main = "Session Completion Action: 1 - Ask teacher, 2 - Start new session, 3 - Give up")
 ```
 
-#Create a categorical outcome variable based on student score to advise the teacher using an "ifelse" statement
+## Part II: Regression Tree
+
+We want to see if we can build a decision tree to help teachers decide which students to follow up with, based on students' performance in Assistments. We will create three groups ("teacher should intervene", "teacher should monitor student progress" and "no action") based on students' previous use of the system and how many hints they use. To do this we will be building a decision tree using the "party" package. The `party` package builds decision trees based on a set of statistical stopping rules.
+
+### Visualize our outcome variable "score"
 ```{r}
-D1$advice <- 
+hist(D1$score, main = "Students' Performance in Assistments", xlab = "Score")
 ```
 
-#Build a decision tree that predicts "advice" based on how many problems students have answered before, the percentage of those problems they got correct and how many hints they required
+### Create a categorical outcome variable based on student score to advise the teacher using an "ifelse" statement
 ```{r}
-score_ctree <- 
+advice <- ifelse(D1$score>=.8, "no action", 
+                    ifelse(D1$score<.8 & D1$score>=.6, "monitor", "intervene"))
+advice <- as.factor(advice)
+D1$advice <- advice
 ```
 
-#Plot tree
+### Build a decision tree that predicts "advice" based on how many problems students have answered before, the percentage of those problems they got correct and how many hints they required
 ```{r}
-
+score_ctree <- rpart(formula = advice ~ prior_prob_count + prior_percent_correct + hints, 
+                     data = D1, 
+                     method = "class")
 ```
 
-Please interpret the tree, which two behaviors do you think the teacher should most closely pay attemtion to?
+### Plot tree
+```{r}
+rpart.plot(x = score_ctree, yesno = 2, type = 0, extra = 0)
+```
 
-#Test Tree
-Upload the data "intelligent_tutor_new.csv". This is a data set of a differnt sample of students doing the same problems in the same system. We can use the tree we built for the previous data set to try to predict the "advice" we should give the teacher about these new students. 
+Please interpret the tree, which two behaviors do you think the teacher should most closely pay attemtion to?  
+
+The tree predicts what kinds of advice the teacher will give based on 3 attributes of the students: how many problems students have answered before, the percentage of those problems they got correct and how many hints they required. The tree have a depth of 5. The root node is `hints >= 2`.  
+
+The two behaviors teacher should most closely pay attemtion to are the number of hints the student requested and the percentage of those problems they got correct. If a student take too many hints or get too many incorrect answers, the teacher should intervene with the learning process of the student.  
+
+### Test Tree  
+Upload the data "intelligent_tutor_new.csv". This is a data set of a differnt sample of students doing the same problems in the same system. We can use the tree we built for the previous data set to try to predict the "advice" we should give the teacher about these new students.   
 
 ```{r}
-#Upload new data
+# Upload new data
+D2 <- read.csv("intelligent_tutor_new.csv")
 
-D2 <- 
+# Generate predictions on a test set
+D2$prediction <- predict(object = score_ctree, newdata = D2, type = "class")
 
-#Generate predicted advice using the predict() command for new students based on tree generated from old students
-
-D2$prediction <- 
-
+# Generate the actual values
+D2$actual <- ifelse(D2$score>=.8, "no action", 
+                    ifelse(D2$score<.8 & D2$score>=.6, "monitor", "intervene"))
 ``` 
+
 ## Part III
-Compare the predicted advice with the actual advice that these students recieved. What is the difference between the observed and predicted results?
+Compare the predicted advice with the actual advice that these students recieved. What is the difference between the observed and predicted results?  
+
+All observed results only have one level - "no action" since all scores are 1, while predicted results have three levels - "no action", "monitor", "intervene".
+
+```{r}
+# Table
+table(D2$prediction, D2$actual)
+
+# Calculate the confusion matrix for the test set
+#confusionMatrix(data = as.factor(D2$prediction), reference = as.factor(D2$actual))
+```
+
+
 
 ### To Submit Your Assignment
 
