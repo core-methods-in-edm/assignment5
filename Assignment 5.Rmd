@@ -8,15 +8,19 @@ For this assignment we will be using data from the Assistments Intelligent Tutor
 
 #Install & call libraries
 ```{r}
-install.packages("party", "rpart")
+#install.packages("party", "rpart")
 
 library(rpart)
 library(party)
+library(dplyr)
 ```
 
 ## Part I
 ```{r}
-D1 <- 
+
+f<-file.choose("~/Desktop/hudk4050/Assignment 5/intellignet_tutor.csv")
+D1 <- read.csv(f, header = TRUE)
+
 ```
 
 ##Classification Tree
@@ -40,25 +44,28 @@ We want to see if we can build a decision tree to help teachers decide which stu
 
 #Visualize our outcome variable "score"
 ```{r}
-
+plot(D1$score)
 ```
 
 #Create a categorical outcome variable based on student score to advise the teacher using an "ifelse" statement
 ```{r}
-D1$advice <- 
+D1$advice <- ifelse(D1$score<=0.4,"intervene", ifelse(D1$score>0.4 & D1$score<=0.8,"monitor","no action") )
 ```
 
 #Build a decision tree that predicts "advice" based on how many problems students have answered before, the percentage of those problems they got correct and how many hints they required
 ```{r}
-score_ctree <- 
+score_ctree <- ctree(factor(advice)~ prior_prob_count + prior_percent_correct + hints, D1)
 ```
 
 #Plot tree
 ```{r}
-
+plot(score_ctree)
 ```
 
 Please interpret the tree, which two behaviors do you think the teacher should most closely pay attemtion to?
+
+When students have less than 85% of the problems students have answered before, the teacher should pay attention to them;
+When students ask for more than 12 hints, the teacher should pay attention to them.
 
 #Test Tree
 Upload the data "intelligent_tutor_new.csv". This is a data set of a differnt sample of students doing the same problems in the same system. We can use the tree we built for the previous data set to try to predict the "advice" we should give the teacher about these new students. 
@@ -66,15 +73,24 @@ Upload the data "intelligent_tutor_new.csv". This is a data set of a differnt sa
 ```{r}
 #Upload new data
 
-D2 <- 
+f<-file.choose("~/Desktop/hudk4050/Assignment 5/intellignet_tutor_new.csv")
+D2 <- read.csv(f, header = TRUE)
 
 #Generate predicted advice using the predict() command for new students based on tree generated from old students
 
-D2$prediction <- 
+D2$prediction <- predict(score_ctree,D2)
 
 ``` 
 ## Part III
 Compare the predicted advice with the actual advice that these students recieved. What is the difference between the observed and predicted results?
+
+```{r}
+D2$advice <- ifelse(D2$score<=0.4,"intervene", ifelse(D2$score>0.4 & D2$score<=0.8,"monitor","no action") )
+D2$difference <- ifelse(D2$prediction == "no action",1,0)
+count(D2,difference)
+#the difference between the observed and predicted results are 84 (116 are same), the accuracy is just 116/200 = 58%
+```
+
 
 ### To Submit Your Assignment
 
