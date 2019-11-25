@@ -1,6 +1,6 @@
 ---
 title: "Assignment 5 - Decision Trees"
-author: "Charles Lang"
+author: "Yi Yang"
 date: "November 9, 2016"
 output: html_document
 ---
@@ -8,7 +8,9 @@ For this assignment we will be using data from the Assistments Intelligent Tutor
 
 #Install & call libraries
 ```{r}
-install.packages("party", "rpart")
+#install.packages("rpart")
+#install.packages("party")
+
 
 library(rpart)
 library(party)
@@ -16,7 +18,7 @@ library(party)
 
 ## Part I
 ```{r}
-D1 <- 
+D1 <- read.csv("intelligent_tutor.csv")
 ```
 
 ##Classification Tree
@@ -40,25 +42,30 @@ We want to see if we can build a decision tree to help teachers decide which stu
 
 #Visualize our outcome variable "score"
 ```{r}
-
+hist(D1$score)
 ```
 
 #Create a categorical outcome variable based on student score to advise the teacher using an "ifelse" statement
 ```{r}
-D1$advice <- 
+D1$advice <- ifelse(D1$score < 0.4, "1", ifelse(D1$score < 0.8, "2", "3"))
+# 1 - "teacher should intervene", 2 - "teacher should monitor student progress" and 3 - "no action"
 ```
 
 #Build a decision tree that predicts "advice" based on how many problems students have answered before, the percentage of those problems they got correct and how many hints they required
 ```{r}
-score_ctree <- 
+D1$advice <- as.factor(D1$advice)
+
+score_ctree <- ctree(advice ~ prior_prob_count + prior_percent_correct + hints, data=D1)
 ```
 
 #Plot tree
 ```{r}
-
+plot(score_ctree, main = "Teacher Advice: 1 - Intervene, 2 - Monitor student progress, 3 - No action")
 ```
 
-Please interpret the tree, which two behaviors do you think the teacher should most closely pay attemtion to?
+Please interpret the tree, which two behaviors do you think the teacher should most closely pay attention to?
+
+### The teacher should most closely pay attention to students how have required more than 12 hints, or students who have have answered less than 85 questions before even though they didn't requre any hints.
 
 #Test Tree
 Upload the data "intelligent_tutor_new.csv". This is a data set of a differnt sample of students doing the same problems in the same system. We can use the tree we built for the previous data set to try to predict the "advice" we should give the teacher about these new students. 
@@ -66,15 +73,27 @@ Upload the data "intelligent_tutor_new.csv". This is a data set of a differnt sa
 ```{r}
 #Upload new data
 
-D2 <- 
+D2 <- read.csv("intelligent_tutor_new.csv")
 
 #Generate predicted advice using the predict() command for new students based on tree generated from old students
 
-D2$prediction <- 
-
+D2$prediction <- predict(score_ctree, D2)
 ``` 
+
 ## Part III
 Compare the predicted advice with the actual advice that these students recieved. What is the difference between the observed and predicted results?
+```{r}
+D2$actual <- ifelse(D2$score < 0.4, "1", ifelse(D2$score < 0.8, "2", "3"))
+table(D2$prediction, D2$actual)
+
+mean(ifelse(D2$prediction == "3", 1, 0))
+# -OR- 
+# sum(D2$prediction == "3")/length(D2$prediction)
+
+```
+
+### Since all the students scored 1 in this data set, the actual advice that these students recieved is "no action". However, 130 of them fall into this category in the predicted results while 70 of them are in the "monitor student progress" group. Thus the accuracy of the decision tree is 0.65 in predicting the advice we should give the teacher about these new students.
+
 
 ### To Submit Your Assignment
 
