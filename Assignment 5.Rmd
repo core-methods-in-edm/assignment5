@@ -1,7 +1,8 @@
 ---
 title: "Assignment 5 - Decision Trees"
 author: "Charles Lang"
-date: "November 9, 2016"
+date: "November 9, 2018"
+uni:"jd3603"
 output: html_document
 ---
 For this assignment we will be using data from the Assistments Intelligent Tutoring system. This system gives students hints based on how they perform on math problems. 
@@ -16,7 +17,7 @@ library(party)
 
 ## Part I
 ```{r}
-D1 <- 
+D1 <- read.table("intelligent_tutor.csv", sep = ",", header = TRUE)
 ```
 
 ##Classification Tree
@@ -40,22 +41,22 @@ We want to see if we can build a decision tree to help teachers decide which stu
 
 #Visualize our outcome variable "score"
 ```{r}
-
+hist(D1$score)
 ```
 
 #Create a categorical outcome variable based on student score to advise the teacher using an "ifelse" statement
 ```{r}
-D1$advice <- 
+D1$advice <- ifelse(D1$score <=0.4, "intervene", ifelse(D1$score > 0.4 & D1$score <=0.8, "monitor", "no action"))
 ```
 
 #Build a decision tree that predicts "advice" based on how many problems students have answered before, the percentage of those problems they got correct and how many hints they required
 ```{r}
-score_ctree <- 
+score_ctree <- <- ctree(factor(advice) ~ prior_prob_count + prior_percent_correct + hints, D1)
 ```
 
 #Plot tree
 ```{r}
-
+plot(score_ctree)
 ```
 
 Please interpret the tree, which two behaviors do you think the teacher should most closely pay attemtion to?
@@ -66,11 +67,11 @@ Upload the data "intelligent_tutor_new.csv". This is a data set of a differnt sa
 ```{r}
 #Upload new data
 
-D2 <- 
+D2 <- read.csv("intelligent_tutor_new.csv", header = TRUE)
 
 #Generate predicted advice using the predict() command for new students based on tree generated from old students
 
-D2$prediction <- 
+D2$prediction <-  predict(score_ctree, D2)
 
 ``` 
 ## Part III
@@ -80,3 +81,6 @@ Compare the predicted advice with the actual advice that these students recieved
 
 Please submit your assignment by first "knitting" your RMarkdown document into an html file and then commit, push and pull request both the RMarkdown file and the html file.
 
+mean(ifelse(D2$prediction == "no action", 1, 0))
+
+```
