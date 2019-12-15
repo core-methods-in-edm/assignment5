@@ -8,7 +8,7 @@ For this assignment we will be using data from the Assistments Intelligent Tutor
 
 #Install & call libraries
 ```{r}
-install.packages("party", "rpart")
+# install.packages("party", "rpart")
 
 library(rpart)
 library(party)
@@ -16,7 +16,7 @@ library(party)
 
 ## Part I
 ```{r}
-D1 <- 
+D1 <- read.csv("intelligent_tutor.csv")
 ```
 
 ##Classification Tree
@@ -40,25 +40,38 @@ We want to see if we can build a decision tree to help teachers decide which stu
 
 #Visualize our outcome variable "score"
 ```{r}
-
+# plot(D1$score) not very helpful
+hist(D1$score)
 ```
 
 #Create a categorical outcome variable based on student score to advise the teacher using an "ifelse" statement
 ```{r}
-D1$advice <- 
+# If student scores less than 0.5, teacher should intervene
+# Else, if student scores less than 0.6, teacher should monitor student progress,
+# Else, if student scores above 0.6, teacher should take no action
+
+D1$advice <- ifelse(D1$score < 0.5, "1", ifelse(D1$score < 0.6, "2", "3"))
+
+D1$advice <- as.factor(D1$advice) 
 ```
 
 #Build a decision tree that predicts "advice" based on how many problems students have answered before, the percentage of those problems they got correct and how many hints they required
 ```{r}
-score_ctree <- 
+score_ctree <- ctree(advice ~ prior_prob_count + prior_percent_correct + hints,  data=D1)
 ```
 
 #Plot tree
 ```{r}
-
+plot(score_ctree)
 ```
 
 Please interpret the tree, which two behaviors do you think the teacher should most closely pay attemtion to?
+
+# The teacher should pay most attention to whether students ask for hints.
+# (1) If student asks for fewer than 22 hints, what is their prior percent correct? 
+# (1a) If score is less than 70%, intervene = 0.2, monitor = 0.3, take no action = 0.5
+# (1b) If score is greater than 70%, intervene = 0.1, monitor = 0.05, take no action = 0.8
+# (2) If student asks for greater than 22 hints, intervene = 0.7, monitor = 0.15, take no action = 0.15
 
 #Test Tree
 Upload the data "intelligent_tutor_new.csv". This is a data set of a differnt sample of students doing the same problems in the same system. We can use the tree we built for the previous data set to try to predict the "advice" we should give the teacher about these new students. 
@@ -66,11 +79,12 @@ Upload the data "intelligent_tutor_new.csv". This is a data set of a differnt sa
 ```{r}
 #Upload new data
 
-D2 <- 
+D2 <- read.csv("intelligent_tutor_new.csv")
 
 #Generate predicted advice using the predict() command for new students based on tree generated from old students
 
-D2$prediction <- 
+D2$prediction <- predict(object = D2[,2:4], model = score_ctree)
+
 
 ``` 
 ## Part III
