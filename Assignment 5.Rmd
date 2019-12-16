@@ -8,15 +8,16 @@ For this assignment we will be using data from the Assistments Intelligent Tutor
 
 #Install & call libraries
 ```{r}
-install.packages("party", "rpart")
+##already installed through "Tools". install.packages("party", "rpart")
 
 library(rpart)
 library(party)
+library(rpart.plot)
 ```
 
 ## Part I
 ```{r}
-D1 <- 
+D1 <- read.csv("intelligent_tutor.csv", stringsAsFactors =TRUE, header=TRUE)
 ```
 
 ##Classification Tree
@@ -40,41 +41,53 @@ We want to see if we can build a decision tree to help teachers decide which stu
 
 #Visualize our outcome variable "score"
 ```{r}
-
+hist(D1$score)
 ```
 
 #Create a categorical outcome variable based on student score to advise the teacher using an "ifelse" statement
 ```{r}
-D1$advice <- 
+quantile(D1$score)
+##base on the quantile level to create categorical variables
+D1$advice <- ifelse(D1$score>0.9,"take no action",
+                    ifelse(D1$score>0.67, "monitor required","intervention required"))
 ```
 
 #Build a decision tree that predicts "advice" based on how many problems students have answered before, the percentage of those problems they got correct and how many hints they required
 ```{r}
-score_ctree <- 
+score_ctree <-  rpart(as.factor(advice)~prior_prob_count+prior_percent_correct+hints,method = "class",data=D1)
+score_ctree
 ```
 
 #Plot tree
 ```{r}
-
+rpart.plot(score_ctree)
 ```
 
 Please interpret the tree, which two behaviors do you think the teacher should most closely pay attemtion to?
-
+##Teachers should pay attention to those who ask questions and who constantly start a new session. 
 #Test Tree
 Upload the data "intelligent_tutor_new.csv". This is a data set of a differnt sample of students doing the same problems in the same system. We can use the tree we built for the previous data set to try to predict the "advice" we should give the teacher about these new students. 
 
 ```{r}
 #Upload new data
 
-D2 <- 
+D2 <- read.csv("intelligent_tutor_new.csv",stringsAsFactors = FALSE,header =TRUE )
 
 #Generate predicted advice using the predict() command for new students based on tree generated from old students
 
-D2$prediction <- 
+D2$prediction <- predict(score_ctree,D2,"class")
 
 ``` 
 ## Part III
 Compare the predicted advice with the actual advice that these students recieved. What is the difference between the observed and predicted results?
+```{r}
+D2$advise<-ifelse(D2$score>0.9,"no action",
+                    ifelse(D2$score>0.67,"teacher should monitor student progress","teacher should intervene")
+                    )
+D2$prediction==D2$advise # very different
+mean(D2$prediction==D2$advise)
+```
+##The accuracy for predicting the results is about 22.5% which is not high. This is partially due to the fact that the model was build based on the advices given by teachers and it did not consider each student's ability level as well as other factors into account. 
 
 ### To Submit Your Assignment
 
