@@ -8,7 +8,6 @@ For this assignment we will be using data from the Assistments Intelligent Tutor
 
 #Install & call libraries
 ```{r}
-install.packages("party", "rpart")
 
 library(rpart)
 library(party)
@@ -16,7 +15,7 @@ library(party)
 
 ## Part I
 ```{r}
-D1 <- 
+D1 <- read.csv("intelligent_tutor.csv", header = TRUE)
 ```
 
 ##Classification Tree
@@ -41,21 +40,23 @@ We want to see if we can build a decision tree to help teachers decide which stu
 #Visualize our outcome variable "score"
 ```{r}
 
+hist(D1$score)
 ```
 
 #Create a categorical outcome variable based on student score to advise the teacher using an "ifelse" statement
 ```{r}
-D1$advice <- 
+D1$advice <- ifelse(D1$score > .8,1,ifelse(D1$score >= .5,2,3))
 ```
 
 #Build a decision tree that predicts "advice" based on how many problems students have answered before, the percentage of those problems they got correct and how many hints they required
 ```{r}
-score_ctree <- 
+score_ctree <- ctree(advice ~ prior_prob_count + prior_percent_correct + hints, data = D1)
+
 ```
 
 #Plot tree
 ```{r}
-
+plot(score_ctree)
 ```
 
 Please interpret the tree, which two behaviors do you think the teacher should most closely pay attemtion to?
@@ -66,11 +67,11 @@ Upload the data "intelligent_tutor_new.csv". This is a data set of a differnt sa
 ```{r}
 #Upload new data
 
-D2 <- 
+D2 <- c("no time")
 
 #Generate predicted advice using the predict() command for new students based on tree generated from old students
 
-D2$prediction <- 
+D2$prediction <- c("no time")
 
 ``` 
 ## Part III
