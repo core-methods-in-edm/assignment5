@@ -1,2 +1,3 @@
 *.html linguist-detectable=false
+*.nb.html linguist-detectable=false
 *.Rmd linguist-language=R
