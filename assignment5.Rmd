@@ -16,8 +16,9 @@ The data you will be using comes from the Assistments online intelligent tutorin
 
 ## Start by uploading the data
 ```{r}
-D1 <- 
-
+library(tidyverse)
+D1 <- read_csv("Assistments-confidence.csv")
+head(D1)
 ```
 
 ## Create a correlation matrix of the relationships between the variables, including correlation coefficients for each pair of variables/features.
@@ -25,12 +26,13 @@ D1 <-
 ```{r}
 #You can install the corrplot package to plot some pretty correlation matrices (sometimes called correlograms)
 
-library(ggplot2)
 library(GGally)
 
-ggpairs(D1, 2:8, progress = FALSE) #ggpairs() draws a correlation plot between all the columns you identify by number (second option, you don't need the first column as it is the student ID) and progress = FALSE stops a progress bar appearing as it renders your plot
+ggpairs(D1, 2:8, progress = FALSE) 
+#ggpairs() draws a correlation plot between all the columns you identify by number (second option, you don't need the first column as it is the student ID) and progress = FALSE stops a progress bar appearing as it renders your plot
 
-ggcorr(D1[,-1], method = c("everything", "pearson")) #ggcorr() doesn't have an explicit option to choose variables so we need to use matrix notation to drop the id variable. We then need to choose a "method" which determines how to treat missing values (here we choose to keep everything, and then which kind of correlation calculation to use, here we are using Pearson correlation, the other options are "kendall" or "spearman")
+ggcorr(D1[,-1], method = c("everything", "pearson")) 
+#ggcorr() doesn't have an explicit option to choose variables so we need to use matrix notation to drop the id variable. We then need to choose a "method" which determines how to treat missing values (here we choose to keep everything, and then which kind of correlation calculation to use, here we are using Pearson correlation, the other options are "kendall" or "spearman")
 
 #Study your correlogram images and save them, you will need them later. Take note of what is strongly related to the outcome variable of interest, mean_correct. 
 ```
@@ -38,8 +40,8 @@ ggcorr(D1[,-1], method = c("everything", "pearson")) #ggcorr() doesn't have an e
 ## Create a new data frame with the mean_correct variable removed, we want to keep that variable intact. The other variables will be included in our PCA.
 
 ```{r}
-D2 <- 
-
+D2 <- D1 %>% select(-mean_correct,-id)
+head(D2)
 ```
 
 ## Now run the PCA on the new data frame
@@ -68,22 +70,44 @@ plot(pca, type = "lines")
 
 ## Decide which components you would drop and remove them from your data set.
 
+`answer`
+
+Usually there are several ways to determine how many variables to keep.
+
+1. Based on the cumulative proportion of variance, we typically keep the components which together could explain at least 80 percent of the variance. In this case, we should keep the first five components.
+
+2. Based on the variance itself, we typically only keep the components which has the variance at least bigger than 1. In this case we should keep the first three components. 
+
+3. In the end, we should also think about how good interpretation ability each the principal component has. Each principal component is a linear combination of the original variables, which we should check whether each components' result makes sense. 
+
+In this study, I will only keep the first 5 principal components.
+
 ## Part II
 
 ```{r}
 #Now, create a data frame of the transformed data from your pca.
 
-D3 <- 
+D3 <- as.data.frame(as.matrix(D2) %*% pca$rotation[,1:5])
+
 
 #Attach the variable "mean_correct" from your original data frame to D3.
+D3$mean_correct <- D1$mean_correct
+head(D3)
 
+#Now re-run your correlation plots between the transformed data and mean_correct. If you had dropped some components would you have lost important information about mean_correct?
 
-
-#Now re-run your correlation plots between the transformed data and mean_correct. If you had dropped some components would you have lost important infomation about mean_correct?
-
-
+ggpairs(D3, progress = FALSE) 
 
 ```
+
+`answer`
+
+As we can see from the correlation plot. Only the fifth principal component has significant correlation with mean score. Meanwhile, for the fifth principal component, the contribution from prior percent correct and mean hint is strong. Both of these two variables are the ones which have significant correlation with mean score. However, problem attempted also has strong contribution, which is not highly correlated to the mean score in the oringal data.
+```{r}
+round(pca$rotation[,1:5],2)
+```
+
+
 ## Now print out the loadings for the components you generated:
 
 ```{r}
@@ -92,6 +116,7 @@ pca$rotation
 #Examine the eigenvectors, notice that they are a little difficult to interpret. It is much easier to make sense of them if we make them proportional within each component
 
 loadings <- abs(pca$rotation) #abs() will make all eigenvectors positive
+loadings
 
 #Now examine your components and try to come up with substantive descriptions of what some might represent?
 
@@ -101,14 +126,48 @@ biplot(pca)
 
 
 ```
+For the first principal component: it mainly related to the attempts at problems in the current session. In which, mean hint and mean attempt have biggest contribution.
+
+For the second principal component: it mainly related to prior experience. In which, prior prob count and prior percent correct have biggest contribution.
+
+For the third principal component: it mainly related to the mean confidence.
+
+For the fourth principal component: it mainly related to the prior prob count and mean confidence. 
+
+For the fifth principal component: it mainly related to the mean attempt.
+
+For the sixth principal component: it mainly related to mean hint.
+
 # Part III  
-Also in this repository is a data set collected from TC students (tc-program-combos.csv) that shows how many students thought that a TC program was related to andother TC program. Students were shown three program names at a time and were asked which two of the three were most similar. Use PCA to look for components that represent related programs. Explain why you think there are relationships between these programs.
+Also in this repository is a data set collected from TC students (tc-program-combos.csv) that shows how many students thought that a TC program was related to another TC program. Students were shown three program names at a time and were asked which two of the three were most similar. Use PCA to look for components that represent related programs. Explain why you think there are relationships between these programs.
+
+`answer`
+
+First, I transfer the original data into the correlation matrix. In the original data, the max value is 14, which represents the case when correlation between two course is 1. 
+Whereas the min value is 0, which represents the case when correlation between two course is 0. All the other value will be transferred into a correlation-type value range from 0 to 1. 
 
 ```{r}
-
+data <- read_csv("tc-program-combos.csv")
+head(data)
+rating <- as.matrix(data[1:nrow(data)-1,2:ncol(data)])
+rating_cor <- rating / max(rating)
+pca <- prcomp(rating_cor)
+summary(pca)
 ```
 
+I choose to keep the first 25 components. Here is the interpreation of the first three components.
 
+For the first component, the main contribution came from change.leadership, economics.and.education, school.principals. These are highly related to the education (educational leadership).
+
+For the second component, the main contribution came from creative.technologies and design.and.development.of.digital.games. These are highly related to the technologies. 
+
+For the third component: the main contribution came from neurosicence, psychology, clinical psychology. These are highly related to psychology.
+```{r}
+rotate <- abs(round(pca$rotation[,1:3],2))
+sort(rotate[,1],decreasing = T)[1:10]
+sort(rotate[,2],decreasing = T)[1:10]
+sort(rotate[,3],decreasing = T)[1:10]
+```
 
 
 
