@@ -2,7 +2,10 @@
 title: "Principle Component Aanalysis"
 output: html_document
 ---
-## Data
+Yingxin Ye
+yy2649
+
+# Data
 The data you will be using comes from the Assistments online intelligent tutoring system (https://www.assistments.org/). It describes students working through online math problems. Each student has the following data associated with them:
 
 - id
@@ -14,13 +17,13 @@ The data you will be using comes from the Assistments online intelligent tutorin
 - mean_attempt: The average number of attempts a student took to answer a problem in the current session
 - mean_confidence: The average confidence each student has in their ability to answer the problems in the current session
 
-## Start by uploading the data
+# Start by uploading the data
 ```{r}
-D1 <- 
+D1 <- read.csv("Assistments-confidence.csv")
 
 ```
 
-## Create a correlation matrix of the relationships between the variables, including correlation coefficients for each pair of variables/features.
+# Create a correlation matrix of the relationships between the variables, including correlation coefficients for each pair of variables/features.
 
 ```{r}
 #You can install the corrplot package to plot some pretty correlation matrices (sometimes called correlograms)
@@ -34,21 +37,24 @@ ggcorr(D1[,-1], method = c("everything", "pearson")) #ggcorr() doesn't have an e
 
 #Study your correlogram images and save them, you will need them later. Take note of what is strongly related to the outcome variable of interest, mean_correct. 
 ```
+## **Answers:** 
+Based on the graph, we can see that our outcome variable of interest "mean_correct" is strongly related to "prior percent correct". 
 
-## Create a new data frame with the mean_correct variable removed, we want to keep that variable intact. The other variables will be included in our PCA.
+# Create a new data frame with the mean_correct variable removed, we want to keep that variable intact. The other variables will be included in our PCA.
 
 ```{r}
-D2 <- 
-
+D2 <- D1[,-5]
+#drop the ID
+D2<-D2[,-1]
 ```
 
-## Now run the PCA on the new data frame
+# Now run the PCA on the new data frame
 
 ```{r}
 pca <- prcomp(D2, scale. = TRUE)
 ```
 
-## Although princomp does not generate the eigenvalues directly for us, we can print a list of the standard deviation of the variance accounted for by each component.
+# Although princomp does not generate the eigenvalues directly for us, we can print a list of the standard deviation of the variance accounted for by each component.
 
 ```{r}
 pca$sdev
@@ -64,51 +70,121 @@ summary(pca)
 #We can look at this to get an idea of which components we should keep and which we should drop
 
 plot(pca, type = "lines")
+
 ```
 
 ## Decide which components you would drop and remove them from your data set.
+## **Answers:** 
+Based on the results, we can see that the variances flatten out at PC2, so we can drop PC3-PC6 to make the calculation more economic if necessary. However, more conservatively, we might want to keep PC3, PC4 and PC5, and drop PC6 only.The variances of P3, P4 and P5 are relatively high, there might be quite a few information included in these three components, while PC6 accounts for a low variances, so if we are more conservative, we might want to only drop PC6.
 
 ## Part II
 
 ```{r}
 #Now, create a data frame of the transformed data from your pca.
 
-D3 <- 
+D3 <- data.frame(pca$x)
 
 #Attach the variable "mean_correct" from your original data frame to D3.
 
+D3$mean_correct<-D1[,5]
 
 
-#Now re-run your correlation plots between the transformed data and mean_correct. If you had dropped some components would you have lost important infomation about mean_correct?
+#Now re-run your correlation plots between the transformed data and mean_correct. If you had dropped some components would you have lost important information about mean_correct?
 
+ggcorr(D3, method = c("everything", "pearson")) 
 
 
 ```
-## Now print out the loadings for the components you generated:
+## **Answers:** 
+From the correlation plots above, we can see that mean correct is most correlated with PC1 and PC2, so if we are less conservative and dropping PC3-PC6, we won't lose too much information. However, we can see PC4 and PC6 are still correlated with mean correct, so if we are dropping PC3-PC6, we are still losing some variances there. Furthermore, since PC6 is the only component that's negatively correlated with mean correct, dropping PC6 might lead to lose important information in this case. Even if we are conservative, and only dropping PC6, we might still lose important information. Thus, there's no guarantee that we wouldn't lose important information by reducing dimension through PCA. 
 
+# Now print out the loadings for the components you generated:
 ```{r}
 pca$rotation
-
 #Examine the eigenvectors, notice that they are a little difficult to interpret. It is much easier to make sense of them if we make them proportional within each component
 
 loadings <- abs(pca$rotation) #abs() will make all eigenvectors positive
-
+loadings
 #Now examine your components and try to come up with substantive descriptions of what some might represent?
 
 #You can generate a biplot to help you, though these can be a bit confusing. They plot the transformed data by the first two components. Therefore, the axes represent the direction of maximum variance accounted for. Then mapped onto this point cloud are the original directions of the variables, depicted as red arrows. It is supposed to provide a visualization of which variables "go together". Variables that possibly represent the same underlying construct point in the same direction.  
-
 biplot(pca)
-
-
 ```
-# Part III  
-Also in this repository is a data set collected from TC students (tc-program-combos.csv) that shows how many students thought that a TC program was related to andother TC program. Students were shown three program names at a time and were asked which two of the three were most similar. Use PCA to look for components that represent related programs. Explain why you think there are relationships between these programs.
+# Now examine your components and try to come up with substantive descriptions of what some might represent?
+## **Answers:** 
+By looking at the results of loadings and the biplot, PC1 might represent how much effort or attempt the students put in, since mean hit, mean attempt and problems attempted have high loading scores; PC2 might represent students' prior knowledge, since the loading score for prior problem correct and prior problem count are quite high; PC3 might represent how confidence the student feel about the course materials, since mean confidence have a high loading score here. For PC4-PC6, it doesn't seem like there;s a clear patterns of what they represent. 
+
+
+## Part III  
+Also in this repository is a data set collected from TC students (tc-program-combos.csv) that shows how many students thought that a TC program was related to another TC program. Students were shown three program names at a time and were asked which two of the three were most similar. Use PCA to look for components that represent related programs. Explain why you think there are relationships between these programs.
 
 ```{r}
+TCD<-read.csv("tc-program-combos.csv")
+ggcorr(TCD[,-1], method = c("everything", "pearson"))
+TCpca <- prcomp(TCD[,-1], scale. = TRUE)
+#TCpca$sdev
+#TCpca$sdev^2
+summary(TCpca)
+plot(TCpca, type = "lines")
+#TCpca$rotation
+TCloadings <- abs(TCpca$rotation)
+#TCloadings
+
+#Ranking<-data.frame(TCloadings[,1:4])
+#Ranking[order(-Ranking$PC1),]
+#Ranking[order(-Ranking$PC2),]
+#Ranking[order(-Ranking$PC3),]
+#Ranking[order(-Ranking$PC4),]
+
+biplot(TCpca)
 
 ```
 
+## **Answers:** 
+From the PCA summary, we can see the proportion of variance accounted for by each component and there are 67 components in the analysis. To further analyze the related programs, we need drop some components to make the analysis more economic. From the variances plot, we can see that after PC4, the variances started to flatten out, so I will drop the components after PC4 for the analysis. By ranking the loading score for PC1-PC4 respectively, we can see the related programs under each component.
 
+For PC1, the programs with high loading scores are:
+    Change.Leadership
+    Economics.and.Education
+    Education.Policy
+    Arts.Administration
+    Politics
+    School.Principals
+    Social.Organizational.Psychology
+    Private.School.Leadership
+    Cooperation.and.Conflict.Resolution
+    Leadership
+These programs are all related leadership, administration, policy and economics, many courses of the programs might be overlapped.
 
+For PC2, the programs with high loading scores are:
+    Clinical.Psychology
+    Neuroscience
+    Kinesiology
+    Physiology
+    Psychology
+    Health.Education
+    Behavior.Analysis
+    Nursing
+    Physical.Education
+These programs are related to psychology, health and behavior science, probably this is why students think that they are related.
 
+For PC3, the programs with high loading scores are:
+    Design.and.Development.of.Digital.Games
+    Cognitive.Science
+    Mathematics
+    Learning.Analytics
+    Education.Technology
+    Creative.Technologies
+    Instructional.Technology.and.Media
+    Measurement..Evaluation.and.Statistics
+    Communication.Media.and.Learning.Technologies
+These programs are more quantitative and mathematical, and they are more related to digital, technological and analytics.
 
+For PC4, the programs with high loading scores are:
+    Linguistics
+    English.Education
+    Teaching.English
+    Literacy
+    Deaf.and.Hard.of.Hearing
+    Bilingual.Bicultural.Education
+These programs are very linguistic related, natrally students would think that they are more related. 
