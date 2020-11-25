@@ -16,7 +16,7 @@ The data you will be using comes from the Assistments online intelligent tutorin
 
 ## Start by uploading the data
 ```{r}
-D1 <- 
+D1 <- read.csv("Assistments-confidence.csv", header = T)
 
 ```
 
@@ -33,12 +33,13 @@ ggpairs(D1, 2:8, progress = FALSE) #ggpairs() draws a correlation plot between a
 ggcorr(D1[,-1], method = c("everything", "pearson")) #ggcorr() doesn't have an explicit option to choose variables so we need to use matrix notation to drop the id variable. We then need to choose a "method" which determines how to treat missing values (here we choose to keep everything, and then which kind of correlation calculation to use, here we are using Pearson correlation, the other options are "kendall" or "spearman")
 
 #Study your correlogram images and save them, you will need them later. Take note of what is strongly related to the outcome variable of interest, mean_correct. 
+# Prior_percent_correct has the strongest correlation with mean_correct = 0.310.
 ```
 
 ## Create a new data frame with the mean_correct variable removed, we want to keep that variable intact. The other variables will be included in our PCA.
 
 ```{r}
-D2 <- 
+D2 <- D1[,-5]
 
 ```
 
@@ -68,20 +69,25 @@ plot(pca, type = "lines")
 
 ## Decide which components you would drop and remove them from your data set.
 
+# I would drop the PC5 to PC7. There is little changes based on the graph above.
+
 ## Part II
 
 ```{r}
 #Now, create a data frame of the transformed data from your pca.
 
-D3 <- 
+D3 <- data.frame(pca$x)
 
 #Attach the variable "mean_correct" from your original data frame to D3.
+D3.new = cbind(D3, D1$mean_correct)
+names(D3.new)[8] = paste("mean_correct")
 
 
+#Now re-run your correlation plots between the transformed data and mean_correct. If you had dropped some components would you have lost important information about mean_correct?
+ggpairs(D3.new, progress = FALSE)
 
-#Now re-run your correlation plots between the transformed data and mean_correct. If you had dropped some components would you have lost important infomation about mean_correct?
 
-
+# PC6 has the strongest correlation with mean_correct = -0.395. Should not drop it or it will lose some major information. Correlation between mean_correct and PC4 is negative while it changes to positive between mean_correct and PC5, should not drop PC5 either. Same reason for not dropping PC7.
 
 ```
 ## Now print out the loadings for the components you generated:
@@ -94,6 +100,11 @@ pca$rotation
 loadings <- abs(pca$rotation) #abs() will make all eigenvectors positive
 
 #Now examine your components and try to come up with substantive descriptions of what some might represent?
+loadings
+#prior_prob_count has the largest absolute eigenvectors in most PC numbers which might indicate that it has the least relationship with other components.
+#prior_percent_correct and mean_confidence has close absolute eigenvectors in PC1 and PC2 which might mean that they have close relationship.
+#Similarly, problems_attempted, mean_hint, and mean_attempt are more likely have a closer relationship.
+
 
 #You can generate a biplot to help you, though these can be a bit confusing. They plot the transformed data by the first two components. Therefore, the axes represent the direction of maximum variance accounted for. Then mapped onto this point cloud are the original directions of the variables, depicted as red arrows. It is supposed to provide a visualization of which variables "go together". Variables that possibly represent the same underlying construct point in the same direction.  
 
@@ -102,10 +113,27 @@ biplot(pca)
 
 ```
 # Part III  
-Also in this repository is a data set collected from TC students (tc-program-combos.csv) that shows how many students thought that a TC program was related to andother TC program. Students were shown three program names at a time and were asked which two of the three were most similar. Use PCA to look for components that represent related programs. Explain why you think there are relationships between these programs.
+Also in this repository is a data set collected from TC students (tc-program-combos.csv) that shows how many students thought that a TC program was related to another TC program. Students were shown three program names at a time and were asked which two of the three were most similar. Use PCA to look for components that represent related programs. Explain why you think there are relationships between these programs.
 
 ```{r}
+mydata = read.csv("tc-program-combos.csv", header = T)
+ggpairs(mydata, 2:15, progress = FALSE)
+# Based on the correlation plot, the strongest correlation is between Bilingual.Biculcutral.Education and Teaching.English = 0.418.
+pca.program <- prcomp(mydata[,-1], scale. = TRUE)
+summary(pca.program)
+plot(pca.program, type = "lines")
+pca.program$rotation
+abs(pca.program$rotation)
+biplot(pca.program)
 
+# PC1 shows that Adult Education, Arts Administration, and Bioingual Bicultural Education might be considered as related programs because of the close absolute eigenvectors.
+# PC2 shows that Physiology, Social.Studies, and Clinical Psychology  might be related.
+#PC3 shows that Anthropology, Social.Studies, Physiology, Bilingual.Bicultural.Education, Clinical Psychology, and College.Advising are related and the rest courses are related.
+#PC4 shows that Physiology, Behavior Analysis, and College.Advising are related and the rest courses might relate.
+#And similar interpretation for the rest PC numbers.
+#In summary, courses that are in the field of education, liguistics, and advising are more likely to have a relationship. Course that are in the field of physiololy, clinical, and science are more likey to relate to each other.
+#For the biplot, there is two clear direction. The upper one are programs that mostly are psychology. The right side are mostrly education and teaching.
+#There are also some programs are not in either these two directions, such as art education which indicates it might have the least relationship with the other programs.
 ```
 
 
