@@ -100,10 +100,11 @@ pca$rotation
 
 loadings <- abs(pca$rotation) #abs() will make all eigenvectors positive
 
+```
 #Now examine your components and try to come up with substantive descriptions of what some might represent?
 
-#PC1 might represent Pc1 might describe how often students make attempts.Since in PC1, components such as mean_hint, mean_attempt, problems_attempted are all very high in absolute value. PC2 may represent a student's prior knowledge, because prior_percent_correct and prior_prob_count are very large in values.
-
+##PC1 might represent Pc1 might describe how often students make attempts.Since in PC1, components such as mean_hint, mean_attempt, problems_attempted are all very high in absolute value. PC2 may represent a student's prior knowledge, because prior_percent_correct and prior_prob_count are very large in values.
+```{r}
 #You can generate a biplot to help you, though these can be a bit confusing. They plot the transformed data by the first two components. Therefore, the axes represent the direction of maximum variance accounted for. Then mapped onto this point cloud are the original directions of the variables, depicted as red arrows. It is supposed to provide a visualization of which variables "go together". Variables that possibly represent the same underlying construct point in the same direction.  
 
 biplot(pca)
@@ -133,9 +134,9 @@ loadings <- abs(pca2$rotation)
 biplot(pca2)
 
 
-#From the biplot we can see that these programs are strongly correlated within principal components groups. For example, literacy and Linguistics have high loading scores and component variances within the group.We can also observe k1 directly to prove this.
-```
 
+```
+##From the biplot we can see that these programs are strongly correlated within principal components groups. For example, literacy and Linguistics have high loading scores and component variances within the group.We can also observe k1 directly to prove this.
 
 
 
