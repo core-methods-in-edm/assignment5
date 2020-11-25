@@ -16,7 +16,7 @@ The data you will be using comes from the Assistments online intelligent tutorin
 
 ## Start by uploading the data
 ```{r}
-D1 <- 
+D1 <- read.csv("Assistments-confidence.csv", header = TRUE)
 
 ```
 
@@ -32,13 +32,14 @@ ggpairs(D1, 2:8, progress = FALSE) #ggpairs() draws a correlation plot between a
 
 ggcorr(D1[,-1], method = c("everything", "pearson")) #ggcorr() doesn't have an explicit option to choose variables so we need to use matrix notation to drop the id variable. We then need to choose a "method" which determines how to treat missing values (here we choose to keep everything, and then which kind of correlation calculation to use, here we are using Pearson correlation, the other options are "kendall" or "spearman")
 
-#Study your correlogram images and save them, you will need them later. Take note of what is strongly related to the outcome variable of interest, mean_correct. 
+#Study your correlogram images and save them, you will need them later. Take note of what is strongly related to the outcome variable of interest, mean_correct.
+#mean_correct and mean_hint are strongly correlated to mean_correct. The percentage of problems a student has answered correctly prior to this session predicts the correctness of students' first attempt in the current session. Students who get the first attempt in the current session correct are less likely to ask for hints. 
 ```
 
 ## Create a new data frame with the mean_correct variable removed, we want to keep that variable intact. The other variables will be included in our PCA.
 
 ```{r}
-D2 <- 
+D2 <- D1[,-5]
 
 ```
 
@@ -67,21 +68,25 @@ plot(pca, type = "lines")
 ```
 
 ## Decide which components you would drop and remove them from your data set.
+```{r}
+#I'll drop the last two components because the first five of the components explain 89% of the variance of the original data.
+```
 
 ## Part II
 
 ```{r}
 #Now, create a data frame of the transformed data from your pca.
-
-D3 <- 
+str(pca)
+pca$x
+D3 <- cbind(D2, pca$x[,1:5])
 
 #Attach the variable "mean_correct" from your original data frame to D3.
-
-
+D3$"mean_correct" <- D1$mean_correct
 
 #Now re-run your correlation plots between the transformed data and mean_correct. If you had dropped some components would you have lost important infomation about mean_correct?
-
-
+library(ggplot2)
+library(GGally)
+ggpairs(D3, 8:13, progress = FALSE)
 
 ```
 ## Now print out the loadings for the components you generated:
@@ -94,6 +99,7 @@ pca$rotation
 loadings <- abs(pca$rotation) #abs() will make all eigenvectors positive
 
 #Now examine your components and try to come up with substantive descriptions of what some might represent?
+#By looking at the second component, it is positively related with prior_prob_count, prior_percent_correct, and mean_confidence. It is negatively related with problems_attempted, mean_hint, and mean_attempt. I think this suggest that students prior performance has an impact on their performance in the current session. The more problems they answered and the higher percentage of correctness they got prior to the current session, the more confident students are in the current. They are able to get problems correct with fewer attempt and hints in the current session.
 
 #You can generate a biplot to help you, though these can be a bit confusing. They plot the transformed data by the first two components. Therefore, the axes represent the direction of maximum variance accounted for. Then mapped onto this point cloud are the original directions of the variables, depicted as red arrows. It is supposed to provide a visualization of which variables "go together". Variables that possibly represent the same underlying construct point in the same direction.  
 
@@ -102,10 +108,34 @@ biplot(pca)
 
 ```
 # Part III  
-Also in this repository is a data set collected from TC students (tc-program-combos.csv) that shows how many students thought that a TC program was related to andother TC program. Students were shown three program names at a time and were asked which two of the three were most similar. Use PCA to look for components that represent related programs. Explain why you think there are relationships between these programs.
+Also in this repository is a data set collected from TC students (tc-program-combos.csv) that shows how many students thought that a TC program was related to another TC program. Students were shown three program names at a time and were asked which two of the three were most similar. Use PCA to look for components that represent related programs. Explain why you think there are relationships between these programs.
 
 ```{r}
+library(tidyverse)
+library(ggplot2)
+library(GGally)
+TC <- read.csv("tc-program-combos.csv", header = TRUE)
+TC1 <- data.frame(TC[,-1], row.names=TC[,1])
 
+#pca
+pca_tc <- prcomp(TC1, scale. = TRUE)
+summary(pca_tc)
+plot(pca_tc, type = "l")
+biplot(pca_tc, cex = 0.5, expand = 1.5)
+biplot(pca_tc, cex = 0.5, expand = 1.5, xlim=c(-0.2, 0.2), ylim=c(0.0, 0.4))
+biplot(pca_tc, cex = 0.5, expand = 1.5, xlim=c(0.0, 0.4), ylim=c(-0.2, 0.0))
+
+#loadings
+pca_tc$rotation
+loadings <- abs(pca_tc$rotation)
+
+#transform data from pca_tc
+TC2 <- cbind(TC1, pca_tc$x[,1:23])
+ggpairs(TC2, columns = c("Adult.Education","PC1","PC2","PC3","PC4","PC5"), 
+        progress = FALSE)
+
+#The first few principal components suggest two main groups of related programs. The first group is programs that studies humans including both human's physical and mental aspects. For example, the second component is positively correlated with programs such as Physiology, Behavior Analysis, Clinical Psychology, Cognitive Science, and Anthropology; they vary together. The second group is programs that are about education in general such as Adult Education, Linguistics, Teaching English, College Advising, and Art Education.
+#The biplot of pca_tc support the two trends. Programs that studies human beings roughly go to the same direction (Health education, Nursing, Counseling psychology, etc.), whereas programs that are about education in general roughly do to the same direction (Urban education, Early childhood education, Literacy, Adult education, and Higher and postsecondary education).   
 ```
 
 
