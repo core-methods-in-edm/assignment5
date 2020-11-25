@@ -16,7 +16,7 @@ The data you will be using comes from the Assistments online intelligent tutorin
 
 ## Start by uploading the data
 ```{r}
-D1 <- 
+D1 <-read.csv("Assistments-confidence.csv", header=TRUE) 
 
 ```
 
@@ -38,8 +38,9 @@ ggcorr(D1[,-1], method = c("everything", "pearson")) #ggcorr() doesn't have an e
 ## Create a new data frame with the mean_correct variable removed, we want to keep that variable intact. The other variables will be included in our PCA.
 
 ```{r}
-D2 <- 
-
+library(dplyr)
+library(tidyr)
+D2 <- select(D1, -5)
 ```
 
 ## Now run the PCA on the new data frame
@@ -67,26 +68,30 @@ plot(pca, type = "lines")
 ```
 
 ## Decide which components you would drop and remove them from your data set.
+I will drop component 7 because it accounts for least amount of variance. 
+
 
 ## Part II
 
 ```{r}
 #Now, create a data frame of the transformed data from your pca.
 
-D3 <- 
+D3 <- select(D2, -7)
 
 #Attach the variable "mean_correct" from your original data frame to D3.
-
-
+D3 <- mutate(D3, D1$mean_correct)
+names(D3)[7] <- "mean_correct"
 
 #Now re-run your correlation plots between the transformed data and mean_correct. If you had dropped some components would you have lost important infomation about mean_correct?
 
+ggpairs(D3, 2:7, progress = FALSE)
 
-
+# No, the correlation plots between the transformed data and mean_correct did not change a lot. The dropped component 7 is not too important and it can be removed.
 ```
 ## Now print out the loadings for the components you generated:
 
 ```{r}
+pca <- prcomp(D3, scale. = TRUE)
 pca$rotation
 
 #Examine the eigenvectors, notice that they are a little difficult to interpret. It is much easier to make sense of them if we make them proportional within each component
@@ -105,9 +110,14 @@ biplot(pca)
 Also in this repository is a data set collected from TC students (tc-program-combos.csv) that shows how many students thought that a TC program was related to andother TC program. Students were shown three program names at a time and were asked which two of the three were most similar. Use PCA to look for components that represent related programs. Explain why you think there are relationships between these programs.
 
 ```{r}
+D4 <- read.csv("tc-program-combos.csv", header= TRUE)
+D5 <- select(D4,-1)
+pca2 <- prcomp(D5, scale. = TRUE)
+
+loadings <- abs(pca2$rotation)
 
 ```
-
+There are 50 components. Here are two major componets that I found that might have high correlation: PC1: Physiology, Behavior Analysis, Clinical Psychology, Nursing, Health.Education, Kinesiology, Neuroscience, Psychology; PC2: Arts.Administration, Cooperation.and.Conflict.Resolution, Economics.and.Education, Education.Policy, Change.Leadership, Leadership, Politics, Private.School.Leadership. I looked at the loadings which show how much amount of this question belongs in this component, and the questions under the same componet have similar loading values. It does make sense because PC1 is medical and physical condition related while PC2 is business and administraed related. Thus, I think there are relationship between these programs. 
 
 
 
