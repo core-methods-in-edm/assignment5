@@ -133,4 +133,5 @@ The relationship between these majors is that leadership position in Educational
 
 The second principal component represents also multiple majors which are Physiology, Behavior.Analysis, Clinical.Psychology, Nursing, Health.Education, Kinesiology, Neuroscience, Physical.Education and Psychology. Those majors are related to each other and students who like the health sector go for those majors. 
 
-The third principal component represents also multiple majors which are Communication.Media.and.Learning.Technologies, Measurement..Evaluation.and.Statistics, Mathematics, Learning.Analytics, Instructional.Technology.and.Media, Education.Technology, Design.and.Development.of.Digital.Games, Creative.Technologies and Cognitive.Science. Those majors represents students who are interested in technology, data and quantitative analysis.  
+The third principal component represents also multiple majors which are Communication.Media.and.Learning.Technologies, Measurement..Evaluation.and.Statistics, Mathematics, Learning.Analytics, Instructional.Technology.and.Media, Education.Technology, Design.and.Development.of.Digital.Games, Creative.Technologies and Cognitive.Science. Those majors represents students who are interested in technology, data and quantitative analysis. 
+
