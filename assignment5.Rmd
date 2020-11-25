@@ -14,19 +14,22 @@ The data you will be using comes from the Assistments online intelligent tutorin
 - mean_attempt: The average number of attempts a student took to answer a problem in the current session
 - mean_confidence: The average confidence each student has in their ability to answer the problems in the current session
 
+## Loading libraries
+```{r}
+library(ggplot2)
+library(GGally)
+library(factoextra)
+```
+
 ## Start by uploading the data
 ```{r}
-D1 <- 
+D1 <- read.csv("Assistments-confidence.csv", header = TRUE)
 
 ```
 
 ## Create a correlation matrix of the relationships between the variables, including correlation coefficients for each pair of variables/features.
 
 ```{r}
-#You can install the corrplot package to plot some pretty correlation matrices (sometimes called correlograms)
-
-library(ggplot2)
-library(GGally)
 
 ggpairs(D1, 2:8, progress = FALSE) #ggpairs() draws a correlation plot between all the columns you identify by number (second option, you don't need the first column as it is the student ID) and progress = FALSE stops a progress bar appearing as it renders your plot
 
@@ -38,7 +41,8 @@ ggcorr(D1[,-1], method = c("everything", "pearson")) #ggcorr() doesn't have an e
 ## Create a new data frame with the mean_correct variable removed, we want to keep that variable intact. The other variables will be included in our PCA.
 
 ```{r}
-D2 <- 
+drop <- c("mean_correct")
+D2 <- D1[,!(names(D1) %in% drop)]
 
 ```
 
@@ -66,6 +70,7 @@ summary(pca)
 plot(pca, type = "lines")
 ```
 
+
 ## Decide which components you would drop and remove them from your data set.
 
 ## Part II
@@ -73,15 +78,34 @@ plot(pca, type = "lines")
 ```{r}
 #Now, create a data frame of the transformed data from your pca.
 
-D3 <- 
+var_coord_func <- function(loadings, sdev){
+  loadings*sdev
+}
 
+# Compute Coordinates
+loadings <- pca$rotation
+sdev <- pca$sdev
+var.coord <- t(apply(loadings, 1, var_coord_func, sdev)) 
+head(var.coord[, 1:4])
+
+
+D3 <- data.frame(pca$x)
 #Attach the variable "mean_correct" from your original data frame to D3.
 
-
+D3$meancorrect <- D1$mean_correct
 
 #Now re-run your correlation plots between the transformed data and mean_correct. If you had dropped some components would you have lost important infomation about mean_correct?
 
+ggpairs(D3, progress = FALSE)
+ggcorr (D3, method = c("everything", "pearson"))
 
+D3_drop <- D3[,1:4]
+D3_drop$meancorrect <- D1$mean_correct
+
+ggpairs(D3_drop, progress = FALSE)
+ggcorr (D3_drop, method = c("everything", "pearson"))
+
+#Answer: Yes given the significantly negative correlation between mean correct and the sixth principle component (ρ=-0.395). The correlations between mean correct and other principle components are intact.
 
 ```
 ## Now print out the loadings for the components you generated:
@@ -99,13 +123,46 @@ loadings <- abs(pca$rotation) #abs() will make all eigenvectors positive
 
 biplot(pca)
 
-
 ```
 # Part III  
 Also in this repository is a data set collected from TC students (tc-program-combos.csv) that shows how many students thought that a TC program was related to andother TC program. Students were shown three program names at a time and were asked which two of the three were most similar. Use PCA to look for components that represent related programs. Explain why you think there are relationships between these programs.
 
 ```{r}
+T1 <- read.csv("tc-program-combos.csv", header = TRUE)
+T2<- T1[,-1]
+pca_tc <- prcomp(T2, scale. = TRUE)
+pca$sdev
 
+pca_tc$sdev^2
+
+summary(pca_tc)
+
+plot(pca_tc, type = "lines")
+
+pca$rotation
+
+loadings_tc <- abs(pca_tc$rotation) #abs() will make all eigenvectors positive
+
+head(summary(pca_tc))
+
+
+var_coord_func <- function(loadings, sdev){
+  loadings*sdev
+}
+
+# Compute Coordinates
+loadings <- pca_tc$rotation
+sdev <- pca_tc$sdev
+var.coord <- t(apply(loadings, 1, var_coord_func, sdev)) 
+head(var.coord)
+
+fviz_pca_var(pca_tc,
+             col.var = "contrib", # Color by contributions to the PC
+             gradient.cols = c("#00AFBB", "#E7B800", "#FC4E07"),
+             repel = TRUE     # Avoid text overlapping
+             )
+
+##Answer: According to the information of principal component loading, Adult Education, Teaching English, Bilingual&Bicultural Education, Clinical Psychology, Cognitive Science, College Advising, and Communication Science and Disorders are the three programs that have highest positive contribution to PC5, which means there are some significant intersections among the three programs. This may be because all these programs are related to both language skills and lifecareer development.
 ```
 
 
