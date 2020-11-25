@@ -16,7 +16,7 @@ The data you will be using comes from the Assistments online intelligent tutorin
 
 ## Start by uploading the data
 ```{r}
-D1 <- 
+D1 <- read.csv("Assistments-confidence.csv")
 
 ```
 
@@ -38,7 +38,7 @@ ggcorr(D1[,-1], method = c("everything", "pearson")) #ggcorr() doesn't have an e
 ## Create a new data frame with the mean_correct variable removed, we want to keep that variable intact. The other variables will be included in our PCA.
 
 ```{r}
-D2 <- 
+D2 <- D1[,c(-1,-5)]
 
 ```
 
@@ -68,21 +68,23 @@ plot(pca, type = "lines")
 
 ## Decide which components you would drop and remove them from your data set.
 
+Drop PC6 since it has the least variance.
+
 ## Part II
 
 ```{r}
 #Now, create a data frame of the transformed data from your pca.
 
-D3 <- 
+D3 <- pca$x
 
 #Attach the variable "mean_correct" from your original data frame to D3.
 
-
+D3 <- cbind(D3, mean_correct = D1$mean_correct)
 
 #Now re-run your correlation plots between the transformed data and mean_correct. If you had dropped some components would you have lost important infomation about mean_correct?
+ggcorr(D3, method = c("everything", "pearson"))
 
-
-
+# PC6 has high correlation with mean_correct, so it shouldn't be dropped even though it has the least variance. PC5 and PC3 have no correlation with mean_correct.
 ```
 ## Now print out the loadings for the components you generated:
 
@@ -92,23 +94,57 @@ pca$rotation
 #Examine the eigenvectors, notice that they are a little difficult to interpret. It is much easier to make sense of them if we make them proportional within each component
 
 loadings <- abs(pca$rotation) #abs() will make all eigenvectors positive
-
+loadings_prop = loadings
+for (i in c(1:6)){
+  loadings_prop[,i] =  loadings[,i]/sum(loadings[,i])
+}
+loadings_prop
 #Now examine your components and try to come up with substantive descriptions of what some might represent?
+
+#PC1 may represent the relationship between the number of hints used and the number of attempts. That might mean that students who use hints often have more attempts. PC2 may represent how students perform in the previous session in terms of the number of problems they have done and the percentage of correctness. PC3 may represent the cause of confidence in current session. In other words, more problems answered in the previous session may increase students' confidence in the current session and more hints used may decrease students' confidence. PC4  
 
 #You can generate a biplot to help you, though these can be a bit confusing. They plot the transformed data by the first two components. Therefore, the axes represent the direction of maximum variance accounted for. Then mapped onto this point cloud are the original directions of the variables, depicted as red arrows. It is supposed to provide a visualization of which variables "go together". Variables that possibly represent the same underlying construct point in the same direction.  
 
-biplot(pca)
-
-
+biplot(pca,col=c("white", "blue"),xlim=c(-0.15,0.1), ylim=c(-0.05,0.15))
+# Students are usually confident when they have high percentage of correctness in previous sessions. The more problems a student has answered in the previous session, the higher the number of problems the student has attempted in the current session. Besides, the more a student asked for hints the more attempts he had.- prior_prob_count: How many problems a student has answered in the system prior to this session. PC4 is about everything but mean_hint. PC5 may represent the combination of problems_attempted and mean_attempt, so it is an attempt factor. PC6 is about everything but mean_confidence.
 ```
 # Part III  
 Also in this repository is a data set collected from TC students (tc-program-combos.csv) that shows how many students thought that a TC program was related to andother TC program. Students were shown three program names at a time and were asked which two of the three were most similar. Use PCA to look for components that represent related programs. Explain why you think there are relationships between these programs.
 
 ```{r}
-
+data <- read.csv("tc-program-combos.csv")
 ```
 
+```{r}
+pca1 <- prcomp(data[,-1], scale. = TRUE)
+pca1$sdev
 
+#To convert this into variance accounted for we can square it, these numbers are proportional to the eigenvalue
 
+pca1$sdev^2
+
+#A summary of our pca will give us the proportion of variance accounted for by each component
+
+summary(pca1)
+
+#We can look at this to get an idea of which components we should keep and which we should drop
+
+plot(pca1$sdev^2, type = "b")
+
+#We should drop the components after 10th, since they start to stablize and 10 is a good amount for interpreting.
+```
+```{r}
+
+pca1$rotation[,1:10]
+
+loadings1 <- abs(pca1$rotation[,1:10]) #abs() will make all eigenvectors positive
+loadings_prop1 = loadings1
+for (i in c(1:6)){
+  loadings_prop1[,i] =  loadings1[,i]/sum(loadings1[,i])
+}
+loadings_prop1
+#From the loadings, we see clearly that PC1 represents liberal arts programs. PC2 represents medical programs. PC3 represents technological programs. PC4 represents linguistic and educational programs. PC5 has no clear representation since all of the parameters is very small. PC6 represents some school educational programs. PC7 also represents educational programs. PC8 represents social and communicational programs. PC9 represents child educational programs. PC10 represents liberal arts programs. Programs in similar fields can often be categorized into groups.
+biplot(pca1,col=c("white", "blue"))
+```
 
 
