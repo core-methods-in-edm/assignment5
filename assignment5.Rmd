@@ -16,8 +16,7 @@ The data you will be using comes from the Assistments online intelligent tutorin
 
 ## Start by uploading the data
 ```{r}
-D1 <- 
-
+D1 <- read.csv("Assistments-confidence.csv", header = T)
 ```
 
 ## Create a correlation matrix of the relationships between the variables, including correlation coefficients for each pair of variables/features.
@@ -38,7 +37,7 @@ ggcorr(D1[,-1], method = c("everything", "pearson")) #ggcorr() doesn't have an e
 ## Create a new data frame with the mean_correct variable removed, we want to keep that variable intact. The other variables will be included in our PCA.
 
 ```{r}
-D2 <- 
+D2 <- D1[-c(1,5)]
 
 ```
 
@@ -72,17 +71,17 @@ plot(pca, type = "lines")
 
 ```{r}
 #Now, create a data frame of the transformed data from your pca.
-
-D3 <- 
+D3 <- data.frame(pca$x)
 
 #Attach the variable "mean_correct" from your original data frame to D3.
-
+D3$mean_correct <- D1$mean_correct
 
 
 #Now re-run your correlation plots between the transformed data and mean_correct. If you had dropped some components would you have lost important infomation about mean_correct?
+ggpairs(D3, progress = FALSE)
+ggcorr(D3, method = c("everything", "pearson"))
 
-
-
+#Yes. From the variance plot, we want to drop PC6 because PC6 only accounts for 8.931% of variance in the data. However, if we dropped PC6 in the previous step, we might lose an important components for mean_correct. PC6 has a correlation of -0.4 with mean_correct
 ```
 ## Now print out the loadings for the components you generated:
 
@@ -94,21 +93,39 @@ pca$rotation
 loadings <- abs(pca$rotation) #abs() will make all eigenvectors positive
 
 #Now examine your components and try to come up with substantive descriptions of what some might represent?
+loadings
+
 
 #You can generate a biplot to help you, though these can be a bit confusing. They plot the transformed data by the first two components. Therefore, the axes represent the direction of maximum variance accounted for. Then mapped onto this point cloud are the original directions of the variables, depicted as red arrows. It is supposed to provide a visualization of which variables "go together". Variables that possibly represent the same underlying construct point in the same direction.  
 
 biplot(pca)
 
-
+#PC1 has higher loading scores for mean_hint and mean attempt, which means it can be viewed as a measure of students' efforts put in the current session. PC2 has higher loading scores for prior_prob_count and prior_percent_correct, which means it can be viewed as a measure of students' efforts put in the prior session. PC3 has a higher score for mean_confidence, which means PC3 can be viewed as a measure of students' confidence of their ability.
 ```
 # Part III  
 Also in this repository is a data set collected from TC students (tc-program-combos.csv) that shows how many students thought that a TC program was related to andother TC program. Students were shown three program names at a time and were asked which two of the three were most similar. Use PCA to look for components that represent related programs. Explain why you think there are relationships between these programs.
 
 ```{r}
+DF1 <- read.csv("tc-program-combos.csv", header = T)
+DF2 <- DF1[-1]
+ggpairs(DF2, progress = FALSE)
+ggcorr(DF2, method = c("everything", "pearson"))
+pca2 <- prcomp(DF2, scale. = TRUE)
+```
+```{r}
+summary(pca2)
+plot(pca2, type = "lines")
 
 ```
 
-
+```{r}
+(loadings <- abs(pca2$rotation))
+# In this PCA, PC1 has higher loading scores for Adult.Education, Arts.Administration and Bilingual.Bicultural.Education. This indicates it can be viewed as a measure of Education-related programs. 
+# PC2 has higher loading scores for Physiology, Behavior.Analysis, and Clinical.Psychology. This indicates it can be viewed as a measure of Medicine and Psychology-related programs. 
+# PC3 has higher loading scores for Arts.Administration and Cognitive.Science. This indicates it can be viewed as a measure of Art and cognitive science-related programs. 
+# PC4 has higher loading scores for Anthropology, Linguistics,Teaching.English, Bilingual.Bicultural.Education and Communication.Sciences.and.Disorders. This indicates it can be viewed as a measure of Linguistics-related programs.
+biplot(pca2)
+```
 
 
 
