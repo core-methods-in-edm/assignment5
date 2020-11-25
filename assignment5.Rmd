@@ -16,7 +16,7 @@ The data you will be using comes from the Assistments online intelligent tutorin
 
 ## Start by uploading the data
 ```{r}
-D1 <- 
+D1 <- read.csv ("Assistments-confidence.csv", header = TRUE)
 
 ```
 
@@ -38,7 +38,7 @@ ggcorr(D1[,-1], method = c("everything", "pearson")) #ggcorr() doesn't have an e
 ## Create a new data frame with the mean_correct variable removed, we want to keep that variable intact. The other variables will be included in our PCA.
 
 ```{r}
-D2 <- 
+D2 <- D1 [, -c(1, 5)]
 
 ```
 
@@ -67,21 +67,23 @@ plot(pca, type = "lines")
 ```
 
 ## Decide which components you would drop and remove them from your data set.
+## Removing pc6, as it accounts for the lowest proportion of variance
 
 ## Part II
 
 ```{r}
 #Now, create a data frame of the transformed data from your pca.
 
-D3 <- 
+D3 <- data.frame (pca$x)
 
 #Attach the variable "mean_correct" from your original data frame to D3.
 
+D3$mean_correct <- D1$mean_correct
 
+#Now re-run your correlation plots between the transformed data and mean_correct. If you had dropped some components would you have lost important information about mean_correct?
 
-#Now re-run your correlation plots between the transformed data and mean_correct. If you had dropped some components would you have lost important infomation about mean_correct?
-
-
+ggpairs (D3, progress = FALSE)
+ggcorr (D3, method = c ("everything", "pearson"))
 
 ```
 ## Now print out the loadings for the components you generated:
@@ -95,6 +97,13 @@ loadings <- abs(pca$rotation) #abs() will make all eigenvectors positive
 
 #Now examine your components and try to come up with substantive descriptions of what some might represent?
 
+## pc1: mean_hint, mean_attempt (measures student engagement)
+## pc2: prior_percent_correct, prior_prob_count (measures student knowledge)
+## pc3: mean_confidence (measures student confidence level)
+## pc4: prior_prob_count (measures student knowledge)
+## pc5: mean_attempt, problems_attempted (measures student resilience level)
+## pc6: n/a
+
 #You can generate a biplot to help you, though these can be a bit confusing. They plot the transformed data by the first two components. Therefore, the axes represent the direction of maximum variance accounted for. Then mapped onto this point cloud are the original directions of the variables, depicted as red arrows. It is supposed to provide a visualization of which variables "go together". Variables that possibly represent the same underlying construct point in the same direction.  
 
 biplot(pca)
@@ -105,6 +114,30 @@ biplot(pca)
 Also in this repository is a data set collected from TC students (tc-program-combos.csv) that shows how many students thought that a TC program was related to andother TC program. Students were shown three program names at a time and were asked which two of the three were most similar. Use PCA to look for components that represent related programs. Explain why you think there are relationships between these programs.
 
 ```{r}
+DF1 <- read.csv ("tc-program-combos.csv", header = TRUE)
+
+ggcorr (DF1 [, -1], method = c ("everything", "pearson"))
+
+DF2 <- DF1 [, -1]
+
+pca2 <- prcomp (DF2, scale. = TRUE)
+
+pca2$sdev
+
+pca2$sdev^2 #To convert this into variance accounted for we can square it, these numbers are proportional to the eigenvalue
+
+summary (pca2) #A summary of our pca will give us the proportion of variance accounted for by each component
+
+plot (pca2, type = "lines") #We can look at this to get an idea of which components we should keep and which we should drop
+
+pca2$rotation #Examine the eigenvectors, notice that they are a little difficult to interpret. It is much easier to make sense of them if we make them proportional within each component
+
+loadings2 <- abs (pca2$rotation) #abs() will make all eigenvectors positive
+
+biplot (pca2)
+
+##biplot provides a visualization of which variables "go together," and variables that possibly represent the same underlying construct point in the same direction; this suggests that there are relationships between these programs
+
 
 ```
 
