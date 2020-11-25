@@ -16,7 +16,7 @@ The data you will be using comes from the Assistments online intelligent tutorin
 
 ## Start by uploading the data
 ```{r}
-D1 <- 
+D1 <- read.csv("Assistments-confidence.csv", header = TRUE)
 
 ```
 
@@ -33,12 +33,13 @@ ggpairs(D1, 2:8, progress = FALSE) #ggpairs() draws a correlation plot between a
 ggcorr(D1[,-1], method = c("everything", "pearson")) #ggcorr() doesn't have an explicit option to choose variables so we need to use matrix notation to drop the id variable. We then need to choose a "method" which determines how to treat missing values (here we choose to keep everything, and then which kind of correlation calculation to use, here we are using Pearson correlation, the other options are "kendall" or "spearman")
 
 #Study your correlogram images and save them, you will need them later. Take note of what is strongly related to the outcome variable of interest, mean_correct. 
+# prior_percent_correct
 ```
 
 ## Create a new data frame with the mean_correct variable removed, we want to keep that variable intact. The other variables will be included in our PCA.
 
 ```{r}
-D2 <- 
+D2 <- D1[,-5]
 
 ```
 
@@ -68,21 +69,25 @@ plot(pca, type = "lines")
 
 ## Decide which components you would drop and remove them from your data set.
 
+I would drop PC5, PC6, and PC7.
+
 ## Part II
 
 ```{r}
 #Now, create a data frame of the transformed data from your pca.
 
-D3 <- 
+D3 <- data.frame(pca$x)
 
 #Attach the variable "mean_correct" from your original data frame to D3.
 
+D3 <- cbind(D3,D1[,5])
 
+#Now re-run your correlation plots between the transformed data and mean_correct. If you had dropped some components would you have lost important information about mean_correct?
 
-#Now re-run your correlation plots between the transformed data and mean_correct. If you had dropped some components would you have lost important infomation about mean_correct?
+ggpairs(D3, progress = FALSE)
+ggcorr(D3, method = c("everything", "pearson"))
 
-
-
+# Yes, if I had dropped PC5, PC6, and PC7, I would not notice the strong relationship between mean_correct and PC6
 ```
 ## Now print out the loadings for the components you generated:
 
@@ -99,12 +104,24 @@ loadings <- abs(pca$rotation) #abs() will make all eigenvectors positive
 
 biplot(pca)
 
-
+# Based on the biplot, we can see that mean_correct, mean_hint, mean_attempt, and problem_attempted point in the same direction.
 ```
 # Part III  
 Also in this repository is a data set collected from TC students (tc-program-combos.csv) that shows how many students thought that a TC program was related to andother TC program. Students were shown three program names at a time and were asked which two of the three were most similar. Use PCA to look for components that represent related programs. Explain why you think there are relationships between these programs.
 
 ```{r}
+D4 <- read.csv("tc-program-combos.csv", header = TRUE)
+D5 <- D4[,-1]
+pca <- prcomp(D5, scale. = TRUE)
+pca$sdev
+pca$sdev^2
+summary(pca)
+plot(pca, type = "lines")
+D6 <- data.frame(pca$x)
+D7 <- cbind(D6,D4[,1])
+pca$rotation
+loadings <- abs(pca$rotation)
+biplot(pca)
 
 ```
 
