@@ -16,8 +16,7 @@ The data you will be using comes from the Assistments online intelligent tutorin
 
 ## Start by uploading the data
 ```{r}
-D1 <- 
-
+D1 <- read.csv("Assistments-confidence.csv", header = TRUE)
 ```
 
 ## Create a correlation matrix of the relationships between the variables, including correlation coefficients for each pair of variables/features.
@@ -38,7 +37,7 @@ ggcorr(D1[,-1], method = c("everything", "pearson")) #ggcorr() doesn't have an e
 ## Create a new data frame with the mean_correct variable removed, we want to keep that variable intact. The other variables will be included in our PCA.
 
 ```{r}
-D2 <- 
+D2 <- D1[,-5]
 
 ```
 
@@ -73,15 +72,16 @@ plot(pca, type = "lines")
 ```{r}
 #Now, create a data frame of the transformed data from your pca.
 
-D3 <- 
+D3 <- data.frame(pca$x)
 
 #Attach the variable "mean_correct" from your original data frame to D3.
 
-
+D3$mean_correct <- D1$mean_correct
 
 #Now re-run your correlation plots between the transformed data and mean_correct. If you had dropped some components would you have lost important infomation about mean_correct?
 
-
+ggpairs(D3, progress = FALSE)
+ggcorr(D3, method = c("everything", "pearson"))
 
 ```
 ## Now print out the loadings for the components you generated:
@@ -105,10 +105,19 @@ biplot(pca)
 Also in this repository is a data set collected from TC students (tc-program-combos.csv) that shows how many students thought that a TC program was related to andother TC program. Students were shown three program names at a time and were asked which two of the three were most similar. Use PCA to look for components that represent related programs. Explain why you think there are relationships between these programs.
 
 ```{r}
+T1 <- read.csv("tc-program-combos.csv", header = TRUE)
+T2 <- T1[,-1]
+tc_pca <- prcomp(T2, scale = TRUE)
+summary(tc_pca)
+plot(tc_pca, type = "lines")
+tc_pca$rotation
+tc_loadings <- abs(tc_pca$rotation)
+biplot(tc_pca)
+
 
 ```
 
-
+Yes, there are relationships between these programs. For example, the psychology programs are closer to each other than other types of program, having both positive mapped value on pc1 and pc2. While for education class, they tend to have lower pc2 mapped value and high pc1 mapped value. In other words, education programs are having similar mapping on pc1 and pc2.
 
 
 
