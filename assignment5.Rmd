@@ -16,7 +16,7 @@ The data you will be using comes from the Assistments online intelligent tutorin
 
 ## Start by uploading the data
 ```{r}
-D1 <- 
+D1 <- read.csv("Assistments-confidence.csv", header = TRUE)
 
 ```
 
@@ -27,18 +27,23 @@ D1 <-
 
 library(ggplot2)
 library(GGally)
+library(dplyr)
+library(tidyr)
+library(corrplot)
 
 ggpairs(D1, 2:8, progress = FALSE) #ggpairs() draws a correlation plot between all the columns you identify by number (second option, you don't need the first column as it is the student ID) and progress = FALSE stops a progress bar appearing as it renders your plot
 
 ggcorr(D1[,-1], method = c("everything", "pearson")) #ggcorr() doesn't have an explicit option to choose variables so we need to use matrix notation to drop the id variable. We then need to choose a "method" which determines how to treat missing values (here we choose to keep everything, and then which kind of correlation calculation to use, here we are using Pearson correlation, the other options are "kendall" or "spearman")
 
 #Study your correlogram images and save them, you will need them later. Take note of what is strongly related to the outcome variable of interest, mean_correct. 
+correlogram= cor(D1[,-1])
+corrplot(correlogram,method = "color")
 ```
 
 ## Create a new data frame with the mean_correct variable removed, we want to keep that variable intact. The other variables will be included in our PCA.
 
 ```{r}
-D2 <- 
+D2 <- select(D1,-id,-mean_correct)
 
 ```
 
@@ -67,19 +72,29 @@ plot(pca, type = "lines")
 ```
 
 ## Decide which components you would drop and remove them from your data set.
+```{r}
+#I would drop and remove component 6 to make the calculation more economic.
+#The component that we could get rid of, may have the least risk of throwing out important variation.( minimizing the chances by throwing out the least amount). And PC1~ PC5 account for a large proportion (above 90%)of the variance in the data.PC6 accounts for a low variances.Thus, I would drop and remove component 6(PC6).
+```
 
 ## Part II
 
 ```{r}
 #Now, create a data frame of the transformed data from your pca.
 
-D3 <- 
+D3 <- data.frame(pca$x)
 
 #Attach the variable "mean_correct" from your original data frame to D3.
 
-
+D3$"mean-correct" <- D1$mean_correct
 
 #Now re-run your correlation plots between the transformed data and mean_correct. If you had dropped some components would you have lost important infomation about mean_correct?
+
+ggpairs(D3, progress = FALSE)
+ggcorr(D3, method = c("everything", "pearson"))
+
+##According to the below plots, we can find that PC6 is negative related to the outcome variable of interest,mean_correct. PC1，PC2 and PC4 are positive related to the outcome variable of interest, mean_correct.Hence,if I had dropped some components (PC6), I would have lost important information (loosing much variance) about mean_correct.
+
 
 
 
@@ -99,13 +114,40 @@ loadings <- abs(pca$rotation) #abs() will make all eigenvectors positive
 
 biplot(pca)
 
+##examine, descriptions:
+#According to the loadings and biplot, we can find PC1 might represent the student's efforts in dealing with a problem (since mean hit, mean attempt and problems attempted have high loading scores in PC1 and there seems to be relationships between these variables according to the biplot). 
+#PC2 might represent the self-learning ability or knowledge reserve of the students before this session (since prior_percent_correct has highe loading scores in PC2).
+#PC3 might represent students' confidence in their own abilities (since mean_confidence has high loading scores in PC3).
+#PC4 might represent knowledge reserve of the students before this session and their time management skills (since prior_prob_count has high loading scores in PC4).
+#PC5 might represent the student's efforts in dealing with a problem (since mean_attempt and problems_attempted have high loading scores in PC5).
+#For PC6, it seems to have nothing to represent in substance.
 
 ```
 # Part III  
 Also in this repository is a data set collected from TC students (tc-program-combos.csv) that shows how many students thought that a TC program was related to andother TC program. Students were shown three program names at a time and were asked which two of the three were most similar. Use PCA to look for components that represent related programs. Explain why you think there are relationships between these programs.
 
 ```{r}
+df2 <- read.csv("tc-program-combos.csv", header=TRUE)
+df3<-df2[,-1]
+ggpairs(df2, 2:68, progress = FALSE)
+ggcorr(df2[,-1], method = c("everything", "pearson"))
 
+pca2 <- prcomp(df3, scale. = TRUE)
+pca2$sdev
+pca2$sdev^2
+summary(pca2)
+plot(pca2, type = "lines")
+
+D4 <- data.frame(pca2$x)
+ggpairs(D4, progress = FALSE)
+ggcorr(D4, method = c("everything", "pearson"))
+
+pca2$rotation
+loadings2 <- abs(pca$rotation)
+biplot(pca2)
+
+
+##From the plot, I think it can show there are relationships between these programs. Because most programs related to psychology move in one direction and all programs related to education move in the opposite direction.In other words, from the same direction we can find there are more than one program (programs point in the same direction).Thus, it is clear that there are relationships between programs. 
 ```
 
 
