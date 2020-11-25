@@ -16,7 +16,7 @@ The data you will be using comes from the Assistments online intelligent tutorin
 
 ## Start by uploading the data
 ```{r}
-D1 <- 
+D1 <- read.csv("Assistments-confidence.csv")
 
 ```
 
@@ -27,7 +27,8 @@ D1 <-
 
 library(ggplot2)
 library(GGally)
-
+library(dplyr)
+library(tidyr)
 ggpairs(D1, 2:8, progress = FALSE) #ggpairs() draws a correlation plot between all the columns you identify by number (second option, you don't need the first column as it is the student ID) and progress = FALSE stops a progress bar appearing as it renders your plot
 
 ggcorr(D1[,-1], method = c("everything", "pearson")) #ggcorr() doesn't have an explicit option to choose variables so we need to use matrix notation to drop the id variable. We then need to choose a "method" which determines how to treat missing values (here we choose to keep everything, and then which kind of correlation calculation to use, here we are using Pearson correlation, the other options are "kendall" or "spearman")
@@ -38,7 +39,7 @@ ggcorr(D1[,-1], method = c("everything", "pearson")) #ggcorr() doesn't have an e
 ## Create a new data frame with the mean_correct variable removed, we want to keep that variable intact. The other variables will be included in our PCA.
 
 ```{r}
-D2 <- 
+D2 <- select(D1, -mean_correct, -id)
 
 ```
 
@@ -46,6 +47,7 @@ D2 <-
 
 ```{r}
 pca <- prcomp(D2, scale. = TRUE)
+pca
 ```
 
 ## Although princomp does not generate the eigenvalues directly for us, we can print a list of the standard deviation of the variance accounted for by each component.
@@ -68,20 +70,23 @@ plot(pca, type = "lines")
 
 ## Decide which components you would drop and remove them from your data set.
 
+I would like to remove the PC5 and PC6 since they only account for a small proportion of the variance.
+
 ## Part II
 
 ```{r}
-#Now, create a data frame of the transformed data from your pca.
-
-D3 <- 
+D3 <- data.frame(pca$x)
 
 #Attach the variable "mean_correct" from your original data frame to D3.
 
-
+D3$mean_correct <- D1$mean_correct
 
 #Now re-run your correlation plots between the transformed data and mean_correct. If you had dropped some components would you have lost important infomation about mean_correct?
 
+ggpairs(D3, progress = FALSE)
+ggcorr(D3, method = c("everything","pearson"))
 
+## Yes, I would lost important information if I drop both PC5 and PC6 since the correlation between PC6 and mean correct is -0.393, which is not small comparing to others.
 
 ```
 ## Now print out the loadings for the components you generated:
@@ -105,9 +110,21 @@ biplot(pca)
 Also in this repository is a data set collected from TC students (tc-program-combos.csv) that shows how many students thought that a TC program was related to andother TC program. Students were shown three program names at a time and were asked which two of the three were most similar. Use PCA to look for components that represent related programs. Explain why you think there are relationships between these programs.
 
 ```{r}
-
+DF1 <- read.csv("tc-program-combos.csv")
+DF2 <- select(DF1, -program)
+ggcorr(DF2, method = c("everything", "pearson"))
 ```
 
+```{r}
+pcaDF <- prcomp(DF2, scale = TRUE)
+pcaDF$sdev
+pcaDF$sdev^2
+summary(pcaDF)
+plot(pcaDF, type = "lines")
+pcaDF$rotation
+loadingsDF <- abs(pcaDF$rotation)
+biplot(pcaDF)
+```
 
 
 
