@@ -16,7 +16,7 @@ The data you will be using comes from the Assistments online intelligent tutorin
 
 ## Start by uploading the data
 ```{r}
-D1 <- 
+D1 <- read.csv("Assistments-confidence.csv", header = TRUE)
 
 ```
 
@@ -24,7 +24,6 @@ D1 <-
 
 ```{r}
 #You can install the corrplot package to plot some pretty correlation matrices (sometimes called correlograms)
-
 library(ggplot2)
 library(GGally)
 
@@ -38,7 +37,8 @@ ggcorr(D1[,-1], method = c("everything", "pearson")) #ggcorr() doesn't have an e
 ## Create a new data frame with the mean_correct variable removed, we want to keep that variable intact. The other variables will be included in our PCA.
 
 ```{r}
-D2 <- 
+library(dplyr)
+D2 <- select(D1,-1,-5)
 
 ```
 
@@ -67,26 +67,35 @@ plot(pca, type = "lines")
 ```
 
 ## Decide which components you would drop and remove them from your data set.
+I think we can remove PC5 and PC6 as they account for less proportion of the variance
 
 ## Part II
 
 ```{r}
 #Now, create a data frame of the transformed data from your pca.
 
-D3 <- 
+D3 <- subset(D2, select=-6)
+D3 <- subset(D3, select=-6)
+
 
 #Attach the variable "mean_correct" from your original data frame to D3.
 
-
+D3$mean_correct <- D1$mean_correct
 
 #Now re-run your correlation plots between the transformed data and mean_correct. If you had dropped some components would you have lost important infomation about mean_correct?
 
+library(ggplot2)
+library(GGally)
+ggpairs(D3,2:6,progess=FALSE)
+ggcorr(D3[,-1], method = c("everything", "pearson"))
 
+#The dropped components seem not too important and can be removed.
 
 ```
 ## Now print out the loadings for the components you generated:
 
 ```{r}
+pca<- prcomp(D3,scale. =TRUE)
 pca$rotation
 
 #Examine the eigenvectors, notice that they are a little difficult to interpret. It is much easier to make sense of them if we make them proportional within each component
@@ -105,8 +114,31 @@ biplot(pca)
 Also in this repository is a data set collected from TC students (tc-program-combos.csv) that shows how many students thought that a TC program was related to andother TC program. Students were shown three program names at a time and were asked which two of the three were most similar. Use PCA to look for components that represent related programs. Explain why you think there are relationships between these programs.
 
 ```{r}
+#Readdata:
+df <- read.csv("tc-program-combos.csv", header=TRUE)
 
+df1 <- subset(df, select=-1)
+
+pca2 <- prcomp(df1, scale. = TRUE)
+loadings <- abs(pca2$rotation)
+loadings
+
+pca2$sdev
+pca2$sdev^2
+summary(pca2)
+
+#plot
+plot(pca2, type = "lines")
+
+pca2$rotation
+loadings2 <- abs(pca$rotation)
+biplot(pca2)
 ```
+
+```{r}
+#Looking at the plot, we can see that most clinic and physical programs go at the same direction, and education-related programs go at the opposite direction, each gathering together. The relationships are like this because these programs share some of the same content knowledge.
+```
+
 
 
 
