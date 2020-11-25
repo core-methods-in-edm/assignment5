@@ -16,7 +16,8 @@ The data you will be using comes from the Assistments online intelligent tutorin
 
 ## Start by uploading the data
 ```{r}
-D1 <- 
+
+D1 <- read.csv("Assistments-confidence.csv", header = T)
 
 ```
 
@@ -38,19 +39,23 @@ ggcorr(D1[,-1], method = c("everything", "pearson")) #ggcorr() doesn't have an e
 ## Create a new data frame with the mean_correct variable removed, we want to keep that variable intact. The other variables will be included in our PCA.
 
 ```{r}
-D2 <- 
+
+D2 <- D1[,-5]
 
 ```
 
 ## Now run the PCA on the new data frame
 
 ```{r}
+
 pca <- prcomp(D2, scale. = TRUE)
+
 ```
 
 ## Although princomp does not generate the eigenvalues directly for us, we can print a list of the standard deviation of the variance accounted for by each component.
 
 ```{r}
+
 pca$sdev
 
 #To convert this into variance accounted for we can square it, these numbers are proportional to the eigenvalue
@@ -67,26 +72,38 @@ plot(pca, type = "lines")
 ```
 
 ## Decide which components you would drop and remove them from your data set.
+```{r}
+
+# I would like to drop the id and mean_confidence. Cause the id is only an identification of each student, it has no actual meaning for the numbers. And we need to exclude it for some procedures, dropping it is more convinent.
+
+# And the mean_confidence(pc7) make up a very small portion of the variance. So it could be removed.
+
+```
 
 ## Part II
 
 ```{r}
 #Now, create a data frame of the transformed data from your pca.
 
-D3 <- 
+D3 <- D2[,c(-1, -7)]
 
 #Attach the variable "mean_correct" from your original data frame to D3.
 
-
+D3c <- cbind(D3, D1$mean_correct)
+colnames(D3c)[6] <- paste("mean_correct")
 
 #Now re-run your correlation plots between the transformed data and mean_correct. If you had dropped some components would you have lost important infomation about mean_correct?
 
+ggpairs(D3c, 1:6, progress = FALSE)
+ggcorr(D3c, method = c("everything", "pearson")) 
 
+# Compared to the previous correlation plots, the strong correlations are still captured for the transformed data. Only the very week ones are dropped, so we didn't lose important information.
 
 ```
 ## Now print out the loadings for the components you generated:
 
 ```{r}
+
 pca$rotation
 
 #Examine the eigenvectors, notice that they are a little difficult to interpret. It is much easier to make sense of them if we make them proportional within each component
@@ -95,16 +112,44 @@ loadings <- abs(pca$rotation) #abs() will make all eigenvectors positive
 
 #Now examine your components and try to come up with substantive descriptions of what some might represent?
 
+# pc1: prior_percent_correct ---- confidence in the past.
+# pc2: prior_prob_count and prior_percent_correct ---- how much content the student have already been tested and how well the student comprehended.
+# pc3: prior_prob_count, prior_percent_correct, problems_attempted ---- how experience the student is in this testing system
+# pc4: prior_prob_count ---- engagement of the student(active/passive)
+# pc5: prior_percent_correct and mean_attempt ---- the relationship between correctness and number of attempts.
+# pc6: prior_percent_correct, mean_hint ---- How the correctness in the past suggests the frequency of using hint in current session.
+# pc7 has been dropped.
+
+
+
 #You can generate a biplot to help you, though these can be a bit confusing. They plot the transformed data by the first two components. Therefore, the axes represent the direction of maximum variance accounted for. Then mapped onto this point cloud are the original directions of the variables, depicted as red arrows. It is supposed to provide a visualization of which variables "go together". Variables that possibly represent the same underlying construct point in the same direction.  
 
 biplot(pca)
 
+# the graph suggests that prior_prob_cont, prior_percent_correct, mean_confidence goes the same direction for pc1 and mean_hint, problems_attempted, mean_attempts goes ont he other direction.
+# For pc2, most of the variables suggests negative correlation besides prior_percent_correct.
+# The graph may provide information like the mean confidence is negatively correlative with the mean_hints and the higher prior_percent_correct the lower the mean attempt.
 
 ```
 # Part III  
 Also in this repository is a data set collected from TC students (tc-program-combos.csv) that shows how many students thought that a TC program was related to andother TC program. Students were shown three program names at a time and were asked which two of the three were most similar. Use PCA to look for components that represent related programs. Explain why you think there are relationships between these programs.
 
 ```{r}
+
+data <- read.csv("tc-program-combos.csv", header = T)
+
+df <- data[,-1]
+
+pca_tc <- prcomp(df, scale. = T)
+summary(pca_tc)
+
+plot(pca_tc, type = "line")
+
+pca_tc$rotation
+loadings_tc <- abs(pca_tc$rotation)
+biplot(pca_tc)
+
+# I think the graph suggests that many programs are related to each other since many variables are going the same direction and programs that can be see as branches of a larger subjects are tend to be on the same direction.
 
 ```
 
