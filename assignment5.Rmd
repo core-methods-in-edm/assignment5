@@ -16,7 +16,7 @@ The data you will be using comes from the Assistments online intelligent tutorin
 
 ## Start by uploading the data
 ```{r}
-D1 <- 
+D1 <- read.csv("Assistments-confidence.csv")
 
 ```
 
@@ -24,7 +24,8 @@ D1 <-
 
 ```{r}
 #You can install the corrplot package to plot some pretty correlation matrices (sometimes called correlograms)
-
+library(tidyr)
+library(dplyr)
 library(ggplot2)
 library(GGally)
 
@@ -38,7 +39,7 @@ ggcorr(D1[,-1], method = c("everything", "pearson")) #ggcorr() doesn't have an e
 ## Create a new data frame with the mean_correct variable removed, we want to keep that variable intact. The other variables will be included in our PCA.
 
 ```{r}
-D2 <- 
+D2 <- select(D1, -mean_correct,-id)
 
 ```
 
@@ -68,22 +69,27 @@ plot(pca, type = "lines")
 
 ## Decide which components you would drop and remove them from your data set.
 
+## I will remove PC6, since it has the least portion of variance and PC1-PC5 are able to explain more than 90% of the information.
+
 ## Part II
 
 ```{r}
 #Now, create a data frame of the transformed data from your pca.
 
-D3 <- 
+D3 <- data.frame(pca$x)
 
 #Attach the variable "mean_correct" from your original data frame to D3.
 
-
+D3$mean_correct <- D1$mean_correct
 
 #Now re-run your correlation plots between the transformed data and mean_correct. If you had dropped some components would you have lost important infomation about mean_correct?
 
-
+ggpairs(D3, progress = FALSE)
+ggcorr(D3, method = c("everything", "pearson"))
 
 ```
+##If I drop P6, I will lose some information about mean_correct, since the correlation of PC6 and mean_correct is -0.393, which is significant and can't be removed. Moreover, PC1&PC2 have strong correlation with mean_correct so we shouldn't drop these two variables. On the other hand, if we drop PC3 and PC5, we won't lose much informtion since they have the least correlation with mean_correct.
+
 ## Now print out the loadings for the components you generated:
 
 ```{r}
@@ -101,12 +107,23 @@ biplot(pca)
 
 
 ```
+##The mean_hint variable is the most important contributor to PC1, and the second one is the mean-attempted variable, so PC1 may represent the performance of students doing problems in the current session. The prior_percent_correct variable is the most important contributor to PC2, and the second one is the prior_prob_count, so PC2 may represent how well the students answer the questions prior to the session. Also, the mean_hint variable is almost uncorrelated with the prior_percent_correct variable.
+
+
 # Part III  
-Also in this repository is a data set collected from TC students (tc-program-combos.csv) that shows how many students thought that a TC program was related to andother TC program. Students were shown three program names at a time and were asked which two of the three were most similar. Use PCA to look for components that represent related programs. Explain why you think there are relationships between these programs.
+Also in this repository is a data set collected from TC students (tc-program-combos.csv) that shows how many students thought that a TC program was related to and other TC program. Students were shown three program names at a time and were asked which two of the three were most similar. Use PCA to look for components that represent related programs. Explain why you think there are relationships between these programs.
 
 ```{r}
-
+tc_program_df <-read.csv('tc-program-combos.csv')
+tc_program_df2 <- select(tc_program_df, -program)
+pca2 <- prcomp(tc_program_df2, scale. = TRUE)
+summary(pca2)
+pca2$sdev
+pca2$rotation
+loadings2 <- abs(pca2$rotation) 
+biplot(pca2)
 ```
+## From the biplot, we can see most psychology courses are related. Most education courses are related. Linguistics and bilingual bicultural education are related, since highly correlated variables point in similar directions and uncorrelated variables are nearly perpendicular to each other.
 
 
 
