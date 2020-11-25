@@ -16,7 +16,7 @@ The data you will be using comes from the Assistments online intelligent tutorin
 
 ## Start by uploading the data
 ```{r}
-D1 <- 
+D1 <- read.csv("Assistments-confidence.csv", header = TRUE)
 
 ```
 
@@ -38,7 +38,9 @@ ggcorr(D1[,-1], method = c("everything", "pearson")) #ggcorr() doesn't have an e
 ## Create a new data frame with the mean_correct variable removed, we want to keep that variable intact. The other variables will be included in our PCA.
 
 ```{r}
-D2 <- 
+library(dplyr)
+library(tidyr)
+D2 <- select(D1, -mean_correct)
 
 ```
 
@@ -67,21 +69,45 @@ plot(pca, type = "lines")
 ```
 
 ## Decide which components you would drop and remove them from your data set.
+what happens when you drop those componenets?
+The proportion of variance for the remaining five components (PC1 to PC5) increases after the PC6 and PC7 are dropped. This finding is not surprising as the cumulative proportions have to add up to 100%.  
+```{r}
+D2a <- data.frame(pca$x)
+D2a <- select(D2a, -c(PC6:PC7))
+pca2 <- prcomp(D2a)
+
+pca2$sdev
+
+#To convert this into variance accounted for we can square it, these numbers are proportional to the eigenvalue
+
+pca2$sdev^2
+
+#A summary of our pca will give us the proportion of variance accounted for by each component
+
+summary(pca2)
+
+plot(pca2, type = "lines")
+```
+
 
 ## Part II
 
 ```{r}
 #Now, create a data frame of the transformed data from your pca.
 
-D3 <- 
+D3 <- data.frame(pca$x)
 
 #Attach the variable "mean_correct" from your original data frame to D3.
-
-
+D3$mean_correct <- as.vector(scale(D1$mean_correct))
+D3 <- as.data.frame(D3)
 
 #Now re-run your correlation plots between the transformed data and mean_correct. If you had dropped some components would you have lost important infomation about mean_correct?
 
+#Dropping PC7 wouldn't have eliminated important information about mean_correct as the correlation between the two is .06, which is low. However, dropping PC6 would have eliminated important information about mean_correct as the correlation between the two is -.395 (a moderate negative relationship), which is the highest correlation between mean_correct and any of the PC's.
 
+ggpairs(D3, progress = FALSE) #ggpairs() draws a correlation plot between all the columns you identify by number (second option, you don't need the first column as it is the student ID) and progress = FALSE stops a progress bar appearing as it renders your plot
+
+ggcorr(D3, method = c("everything", "pearson"))
 
 ```
 ## Now print out the loadings for the components you generated:
@@ -91,24 +117,48 @@ pca$rotation
 
 #Examine the eigenvectors, notice that they are a little difficult to interpret. It is much easier to make sense of them if we make them proportional within each component
 
-loadings <- abs(pca$rotation) #abs() will make all eigenvectors positive
+loadings <- as.data.frame(abs(pca$rotation)) #abs() will make all eigenvectors positive
+loadings
 
-#Now examine your components and try to come up with substantive descriptions of what some might represent?
+D3_PC1 <- loadings %>% arrange(desc(PC1)) %>% select(PC1)
+D3_PC2 <- loadings %>% arrange(desc(PC2)) %>% select(PC2)  
+D3_PC3 <- loadings %>% arrange(desc(PC3)) %>% select(PC3)  
+D3_PC4 <- loadings %>% arrange(desc(PC4)) %>% select(PC4)  
+D3_PC5 <- loadings %>% arrange(desc(PC5)) %>% select(PC5)  
+
+##Now examine your components and try to come up with substantive descriptions of what some might represent?
+#In PC1, other than id, prior problem count, mean hint, and mean attempt have a stronger relationship with this principal component than the other variables, meaning that a student's prior experience, number of hints asked, and the average number of attempts taken to answer a problem are related to explaining the highest proportion of variance in the data. PC2 is similar to PC1 in that the former has the number of problems attempted in the mix, meaning that prior experience is correlated with how a student performs in the current session and these relationships help explain the second largest proportion of variance in the data. Thirdly, and conversely, PC3 is different from the previous two principal components in that the former is highly correlated with prior percent correct, with problems attempted and mean confidence following suit. These three PCs show that prior experience is relatively strongly related with the principal components.    
 
 #You can generate a biplot to help you, though these can be a bit confusing. They plot the transformed data by the first two components. Therefore, the axes represent the direction of maximum variance accounted for. Then mapped onto this point cloud are the original directions of the variables, depicted as red arrows. It is supposed to provide a visualization of which variables "go together". Variables that possibly represent the same underlying construct point in the same direction.  
 
 biplot(pca)
-
 
 ```
 # Part III  
 Also in this repository is a data set collected from TC students (tc-program-combos.csv) that shows how many students thought that a TC program was related to andother TC program. Students were shown three program names at a time and were asked which two of the three were most similar. Use PCA to look for components that represent related programs. Explain why you think there are relationships between these programs.
 
 ```{r}
+D4 <- read.csv("tc-program-combos.csv", header = TRUE)
+pca4 <- prcomp(D4[,2:68], scale = TRUE)
+
+pca4$sdev
+pca4$sdev^2
+summary(pca4)
+plot(pca4, type = "lines")
+
+pca4$rotation
+
+loadings2 <- as.data.frame(abs(pca4$rotation)) 
+D4_PC1 <- loadings2 %>% arrange(desc(PC1)) %>% select(PC1)
+D4_PC2 <- loadings2 %>% arrange(desc(PC2)) %>% select(PC2)  
+D4_PC3 <- loadings2 %>% arrange(desc(PC3)) %>% select(PC3)  
+D4_PC4 <- loadings2 %>% arrange(desc(PC4)) %>% select(PC4)  
+D4_PC5 <- loadings2 %>% arrange(desc(PC5)) %>% select(PC5)  
+
+biplot(pca4)
+
+#The principal components seem to show that students think that programs are related to one another through their connection to the broader fields and, possibly, the departments they are offered in. The first PC shows that programs that are relatively strongly correlated are those that are broadly related to policy/administration: change leadership, education policy, arts administration, and politics. The second principal component shows programs related to science: clinical psychology, neuroscience, kinesiology, and physiology. The third principal component shows programs mainly related to technology: design and development of digital games, cognitive science, learning analytics, and education technology. The fourth principal component mainly shows programs related to language. 
 
 ```
-
-
-
 
 
