@@ -16,7 +16,7 @@ The data you will be using comes from the Assistments online intelligent tutorin
 
 ## Start by uploading the data
 ```{r}
-D1 <- 
+D1 <- read.csv("Assistments-confidence.csv", header= TRUE)
 
 ```
 
@@ -38,7 +38,8 @@ ggcorr(D1[,-1], method = c("everything", "pearson")) #ggcorr() doesn't have an e
 ## Create a new data frame with the mean_correct variable removed, we want to keep that variable intact. The other variables will be included in our PCA.
 
 ```{r}
-D2 <- 
+library(dplyr)
+D2 <- select(D1, 2:4, 6:8)
 
 ```
 
@@ -67,48 +68,178 @@ plot(pca, type = "lines")
 ```
 
 ## Decide which components you would drop and remove them from your data set.
+Drop component 6 because it accounts the least variation in this data
+
+```{r}
+
+pca1 <- data.frame(pca$x)
+pca2 <- pca1[-6]
+```
+
 
 ## Part II
 
 ```{r}
 #Now, create a data frame of the transformed data from your pca.
 
-D3 <- 
+D3 <- data.frame(pca1)
 
 #Attach the variable "mean_correct" from your original data frame to D3.
 
+D3b <- cbind(D3,D1$mean_correct)
+
+colnames(D3b)[7] <- "mean_correct"
 
 
-#Now re-run your correlation plots between the transformed data and mean_correct. If you had dropped some components would you have lost important infomation about mean_correct?
+#Now re-run your correlation plots between the transformed data and mean_correct. If you had dropped some components would you have lost important information about mean_correct?
 
-
+ggcorr(D3b, method = c("everything", "pearson"))
 
 ```
 ## Now print out the loadings for the components you generated:
 
 ```{r}
-pca$rotation
-
 #Examine the eigenvectors, notice that they are a little difficult to interpret. It is much easier to make sense of them if we make them proportional within each component
-
+pca$rotation
 loadings <- abs(pca$rotation) #abs() will make all eigenvectors positive
 
 #Now examine your components and try to come up with substantive descriptions of what some might represent?
+```
 
+PC1 might represent the prior confidence based on the relation between the prior correct percent and mean confidence
+
+PC2 might represent the prior score and experience in the system
+
+PC3 might only represent the how many attempts students do in current session
+
+PC4 might tell us that students'confidence relates to their attempt and prior correct percent
+
+PC5 might tell us how much student are willing to answer the questions in current session relates to their prior correct percent
+
+PC6 tells us the mean hints students ask for related to their prior correct percent. We may guess that the more hints students are asking for, the lower their the prior correct percent might be. 
+
+We can see from our correlation graph that mean correct has positive correlation with PC1, PC2, PC4 but has the negative correlation with PC6. 
+
+Basically, PC1 and PC2 mainly represent the prior count and correct percent of students. PC4 represents the prior and current attempts the students have. 
+However, PC6 mainly represent the average hints students ask for
+
+Such correlation might indicate that mean correct have strong and postive relation with prior study experience especially prior correct percent.
+By contrast, the more hints students ask for, the lower correct percent they might have. 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+```{r}
 #You can generate a biplot to help you, though these can be a bit confusing. They plot the transformed data by the first two components. Therefore, the axes represent the direction of maximum variance accounted for. Then mapped onto this point cloud are the original directions of the variables, depicted as red arrows. It is supposed to provide a visualization of which variables "go together". Variables that possibly represent the same underlying construct point in the same direction.  
 
 biplot(pca)
 
-
 ```
+
 # Part III  
-Also in this repository is a data set collected from TC students (tc-program-combos.csv) that shows how many students thought that a TC program was related to andother TC program. Students were shown three program names at a time and were asked which two of the three were most similar. Use PCA to look for components that represent related programs. Explain why you think there are relationships between these programs.
+Also in this repository is a data set collected from TC students (tc-program-combos.csv) that shows how many students thought that a TC program was related to another TC program. 
+
+Students were shown three program names at a time and were asked which two of the three were most similar. 
+
+Use PCA to look for components that represent related programs. Explain why you think there are relationships between these programs.
 
 ```{r}
-
+DF1 <- read.csv("tc-program-combos.csv", header = TRUE )
 ```
 
+```{r}
+DF2 <- DF1[-1]
+
+PCA <- prcomp(DF2, scale. = TRUE)
+
+summary(PCA)
+
+plot(PCA, type = "line")
+
+DF3 <- data.frame(PCA$x)
+
+biplot(PCA)
+```
+
+```
+```{r}
+loadings1 <- abs(PCA$rotation)
+```
+
+# Principal Component Analysis For TC Programs
+
+A.  PC1 shows us these programs are related to each other:  
+
+1.Change.Leadership  
+2.Economics. and Education  
+3.Education.Policy  
+4.Arts Administration  
+5.Politics  
+6.School Principals  
+7.Social.Organizational.Psychology  
+
+We can guess that this component might represent the school administration because leadship, policy, administrtaion are key words for this component.  
+
+B.PC2 shows us these programs are related to each other:  
+
+1.Clinical.Psychology  
+2. Neuroscience  
+3. Kinesiology  
+4. Physiology  
+5. Psychology  
+6. Health.Education  
+7. Behavior.Analysis  
+8. Nursing  
+9. Physical.Education  
+  
+The reason why these programs are related to each other is that these programs care about human health including body and mental health.  
 
 
+C. PC3 shows us these programs are related to each other:  
 
+1. Cognitive.Science  
+2. Creative.Technologies  
+3. Design.and.Development.of.Digital.Games  
+4. Education.Technology  
+5.Instructional.Technology.and.Media  
+6. Learning.Analytics  
+7. Mathematics  
+8. Measurement..Evaluation.and.Statistics  
+9.Communication.Media.and.Learning.Technologies  
+
+The reason why these programs are related to each other is that these programs care about the relation between technology and education.  
+
+
+D. PC4 shows us these programs are related to each other:    
+
+1. Linguistics  
+2. English Education  
+3. Teaching.English  
+4. Literacy  
+5. Deaf and Hard of Hearing  
+
+The reason why these programs are related to each other is that these programs care about language.  
+
+
+E. PC5 shows us these programs are related to each other:  
+
+1. History  
+2. Music  
+3. psycological Counseling  
+4. Private School Leadership  
+5. Early childhood Special Education  
+  
+The reason why these programs are related to each other is that these programs foucus on K-12 Education.  
+ 
 
