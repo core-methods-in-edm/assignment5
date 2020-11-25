@@ -1,5 +1,5 @@
 ---
-title: "Principle Component Aanalysis"
+title: "XI GU - Principle Component Aanalysis"
 output: html_document
 ---
 ## Data
@@ -16,29 +16,30 @@ The data you will be using comes from the Assistments online intelligent tutorin
 
 ## Start by uploading the data
 ```{r}
-D1 <- 
+D1 <- read.csv("Assistments-confidence.csv")
 
 ```
 
-## Create a correlation matrix of the relationships between the variables, including correlation coefficients for each pair of variables/features.
+## Create a correlation matrix of the relationships between the variables, including correlation coefficients for each pair of variables/features.创建变量之间关系的相关矩阵，包括每对变量/特征的相关系数。
 
 ```{r}
 #You can install the corrplot package to plot some pretty correlation matrices (sometimes called correlograms)
-
+#您可以安装corrplot包来绘制一些漂亮的关联矩阵(有时称为相关图)
 library(ggplot2)
 library(GGally)
 
-ggpairs(D1, 2:8, progress = FALSE) #ggpairs() draws a correlation plot between all the columns you identify by number (second option, you don't need the first column as it is the student ID) and progress = FALSE stops a progress bar appearing as it renders your plot
+ggpairs(D1, 2:8, progress = FALSE) #ggpairs() draws a correlation plot between all the columns you identify by number (second option, you don't need the first column as it is the student ID) and progress = FALSE stops a progress bar appearing as it renders your plot  ggpair()绘制通过数字标识的所有列之间的关联图(第二个选项，您不需要第一列，因为它是学生ID)， progress = FALSE在呈现图时停止出现进度条
 
 ggcorr(D1[,-1], method = c("everything", "pearson")) #ggcorr() doesn't have an explicit option to choose variables so we need to use matrix notation to drop the id variable. We then need to choose a "method" which determines how to treat missing values (here we choose to keep everything, and then which kind of correlation calculation to use, here we are using Pearson correlation, the other options are "kendall" or "spearman")
+#ggcorr()没有选择变量的显式选项，因此我们需要使用矩阵表示法来删除id变量。然后我们需要选择一种“方法”来决定如何处理缺失的值(这里我们选择保留所有的东西，然后使用哪种相关计算，这里我们使用皮尔逊相关，其他选项是“kendall”或“spearman”)
 
-#Study your correlogram images and save them, you will need them later. Take note of what is strongly related to the outcome variable of interest, mean_correct. 
+#Study your correlogram images and save them, you will need them later. Take note of what is strongly related to the outcome variable of interest, mean_correct. 研究相关图并保存它们，以后会用到。注意什么与结果变量的兴趣，mean_correct密切相关
 ```
 
-## Create a new data frame with the mean_correct variable removed, we want to keep that variable intact. The other variables will be included in our PCA.
+## Create a new data frame with the mean_correct variable removed, we want to keep that variable intact. The other variables will be included in our #PCA.创建一个新的数据帧，删除了mean_correct变量，我们希望保持该变量不变。其他变量将包括在我们的PCA中。
 
 ```{r}
-D2 <- 
+D2 <- D1[,c(-1,-5)]
 
 ```
 
@@ -46,52 +47,56 @@ D2 <-
 
 ```{r}
 pca <- prcomp(D2, scale. = TRUE)
+
 ```
 
-## Although princomp does not generate the eigenvalues directly for us, we can print a list of the standard deviation of the variance accounted for by each component.
+## Although princomp does not generate the eigenvalues directly for us, we can print a list of the standard deviation of the variance accounted for by each component. #虽然princomp不直接为我们生成特征值，但我们可以打印出每个组成部分所占方差的标准差列表。
 
 ```{r}
 pca$sdev
 
 #To convert this into variance accounted for we can square it, these numbers are proportional to the eigenvalue
-
+#为了把它转换成方差，我们可以平方它，这些数字与特征值成比例
 pca$sdev^2
 
 #A summary of our pca will give us the proportion of variance accounted for by each component
-
+#对主成分分析的总结将给我们每个成分所占的方差比例
 summary(pca)
 
 #We can look at this to get an idea of which components we should keep and which we should drop
-
+#我们可以通过这个来了解哪些组件应该保留，哪些应该删除
 plot(pca, type = "lines")
 ```
 
 ## Decide which components you would drop and remove them from your data set.
+###Answer: I think we can removed the PC5 and PC6, because both them are account very less proportion of the variance
 
 ## Part II
 
 ```{r}
 #Now, create a data frame of the transformed data from your pca.
 
-D3 <- 
+D3 <- data.frame(pca$x)
 
 #Attach the variable "mean_correct" from your original data frame to D3.
 
-
+D3$mean_correct <- D1$mean_correct
 
 #Now re-run your correlation plots between the transformed data and mean_correct. If you had dropped some components would you have lost important infomation about mean_correct?
+D3
+ggpairs(D3, progress = FALSE)
+ggcorr(D3, method = c("everything", "pearson"))
 
-
-
+# Yes, As we already know Pc1,PC2 and PC3 are strongly related to the mean_correct, But we can see the PC6 have corr:-0.393 will affect mean_correct a lot, so we cannot removed PC6 
 ```
 ## Now print out the loadings for the components you generated:
 
 ```{r}
 pca$rotation
 
-#Examine the eigenvectors, notice that they are a little difficult to interpret. It is much easier to make sense of them if we make them proportional within each component
+#Examine the eigenvectors, notice that they are a little difficult to interpret. It is much easier to make sense of them if we make them proportional within each component 检查特征向量，注意它们的解释有点困难。如果我们使它们在每个组件中成比例，就更容易理解它们
 
-loadings <- abs(pca$rotation) #abs() will make all eigenvectors positive
+loadings <- abs(pca$rotation) #abs() will make all eigenvectors positive ##abs()将使所有特征向量为正
 
 #Now examine your components and try to come up with substantive descriptions of what some might represent?
 
@@ -105,7 +110,18 @@ biplot(pca)
 Also in this repository is a data set collected from TC students (tc-program-combos.csv) that shows how many students thought that a TC program was related to andother TC program. Students were shown three program names at a time and were asked which two of the three were most similar. Use PCA to look for components that represent related programs. Explain why you think there are relationships between these programs.
 
 ```{r}
+T1 <- read.csv("tc-program-combos.csv")
+T2 <- T1[,-1]
+ggcorr(T2, method = c("everything", "pearson"))
 
+pca.tc <- prcomp(T2, scale. =TRUE)
+pca.tc$sdev
+pca.tc$sdev^2
+summary(pca.tc)
+plot(pca.tc, las=0.1, type = "line", main = "PCA Of TC Students")
+pca.tc$rotation
+loadings.tc <- abs(pca.tc$rotation)
+biplot(pca.tc)
 ```
 
 
