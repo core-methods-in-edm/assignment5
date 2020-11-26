@@ -129,7 +129,7 @@ PCA_T$sdev
 PCA_T$sdev^2
 summary(PCA_T)
 plot(PCA_T, type="lines")
-PCA_T$rotation
+#PCA_T$rotation
 PCAT_loadings <- abs(PCA_T$rotation)
 biplot(PCA_T)
  
