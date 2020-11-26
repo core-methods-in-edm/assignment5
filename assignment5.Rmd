@@ -16,7 +16,8 @@ The data you will be using comes from the Assistments online intelligent tutorin
 
 ## Start by uploading the data
 ```{r}
-D1 <- 
+D1 <- read.csv("Assistments-confidence.csv", header = TRUE)
+library(tidyverse)
 
 ```
 
@@ -27,6 +28,7 @@ D1 <-
 
 library(ggplot2)
 library(GGally)
+library(corrplot)
 
 ggpairs(D1, 2:8, progress = FALSE) #ggpairs() draws a correlation plot between all the columns you identify by number (second option, you don't need the first column as it is the student ID) and progress = FALSE stops a progress bar appearing as it renders your plot
 
@@ -38,7 +40,7 @@ ggcorr(D1[,-1], method = c("everything", "pearson")) #ggcorr() doesn't have an e
 ## Create a new data frame with the mean_correct variable removed, we want to keep that variable intact. The other variables will be included in our PCA.
 
 ```{r}
-D2 <- 
+D2 <- as_tibble(D1) %>%  select(-1,-5)#removed the first ID column
 
 ```
 
@@ -67,20 +69,24 @@ plot(pca, type = "lines")
 ```
 
 ## Decide which components you would drop and remove them from your data set.
+I will select components 1-4 since they account for about 80% of the variance.
 
 ## Part II
 
 ```{r}
 #Now, create a data frame of the transformed data from your pca.
+library(broom)
 
-D3 <- 
 
 #Attach the variable "mean_correct" from your original data frame to D3.
 
-
+D3 <- augment(pca, data = D1) %>% select(mean_correct,.fittedPC1:.fittedPC4)
 
 #Now re-run your correlation plots between the transformed data and mean_correct. If you had dropped some components would you have lost important infomation about mean_correct?
 
+ggpairs(D3,progress = FALSE)
+
+ggcorr(D3, method = c("everything", "pearson"))
 
 
 ```
@@ -91,9 +97,11 @@ pca$rotation
 
 #Examine the eigenvectors, notice that they are a little difficult to interpret. It is much easier to make sense of them if we make them proportional within each component
 
-loadings <- abs(pca$rotation) #abs() will make all eigenvectors positive
+loadings <- abs(pca$rotation)#abs() will make all eigenvectors positive
+loadings
 
 #Now examine your components and try to come up with substantive descriptions of what some might represent?
+# The first PC is mostly made up of "mean hint" which according to the first correlations was one of the few things that were correlated to "Mean Correct". Similarly, PC 2 is mostly made up of "prior percent" correct (.82) as it makes sense that a student will be able to correctly answer questions correct if they had have the previous knowledge needed. It is interesting that PC6 had the highest weight of "mean hint" and a highest weight of "prior percent" than PC6 so that is what we loose by removing some variance and one of the components. I also think that we started with really low correlations so removing anything, removes information needed. If we had variables that were highly correlated to start, it would be easier to remove components. 
 
 #You can generate a biplot to help you, though these can be a bit confusing. They plot the transformed data by the first two components. Therefore, the axes represent the direction of maximum variance accounted for. Then mapped onto this point cloud are the original directions of the variables, depicted as red arrows. It is supposed to provide a visualization of which variables "go together". Variables that possibly represent the same underlying construct point in the same direction.  
 
@@ -102,13 +110,32 @@ biplot(pca)
 
 ```
 # Part III  
-Also in this repository is a data set collected from TC students (tc-program-combos.csv) that shows how many students thought that a TC program was related to andother TC program. Students were shown three program names at a time and were asked which two of the three were most similar. Use PCA to look for components that represent related programs. Explain why you think there are relationships between these programs.
+Also in this repository is a data set collected from TC students (tc-program-combos.csv) that shows how many students thought that a TC program was related to another TC program. Students were shown three program names at a time and were asked which two of the three were most similar. Use PCA to look for components that represent related programs. Explain why you think there are relationships between these programs.
 
+
+
+Load and clean the data
 ```{r}
-
+P1 <- read.csv("tc-program-combos.csv", header = TRUE) %>% select (-1)
 ```
 
+PCA
+```{r}
+PCA_T <- prcomp(P1, scale. = TRUE)
+```
+Examining the Components
+```{r}
+PCA_T$sdev
+PCA_T$sdev^2
+summary(PCA_T)
+plot(PCA_T, type="lines")
+#PCA_T$rotation
+PCAT_loadings <- abs(PCA_T$rotation)
+biplot(PCA_T)
+ 
+#from the biplot you can see how students identify similar programs as "similar" programs point to the same direction. For example, you can see Kinesiology, Health Education and Nutrition on the top left, and Psychology programs on the top left.
 
+```
 
 
 
