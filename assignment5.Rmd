@@ -18,6 +18,7 @@ The data you will be using comes from the Assistments online intelligent tutorin
 
 ## Start by uploading the data
 ```{r}
+library(readr)
 D1 <- read.csv(file="Assistments-confidence.csv")
 
 ```
@@ -80,11 +81,11 @@ plot(pca, type = "lines")
 ```{r}
 #Now, create a data frame of the transformed data from your pca.
 
-D3 <- pca
+D3 <- D2[2:6]
 
 #Attach the variable "mean_correct" from your original data frame to D3.
 
-D3 <- c(D2, D1$mean_correct)
+D3 <- c(D3, D1$mean_correct)
 
 #Now re-run your correlation plots between the transformed data and mean_correct. If you had dropped some components would you have lost important infomation about mean_correct?
 ggcorr(D3, method = c("everything", "pearson")) 
@@ -100,6 +101,8 @@ pca$rotation
 loadings <- abs(pca$rotation) #abs() will make all eigenvectors positive
 
 #Now examine your components and try to come up with substantive descriptions of what some might represent?
+
+
 
 #You can generate a biplot to help you, though these can be a bit confusing. They plot the transformed data by the first two components. Therefore, the axes represent the direction of maximum variance accounted for. Then mapped onto this point cloud are the original directions of the variables, depicted as red arrows. It is supposed to provide a visualization of which variables "go together". Variables that possibly represent the same underlying construct point in the same direction.  
 
