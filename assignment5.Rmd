@@ -16,7 +16,7 @@ The data you will be using comes from the Assistments online intelligent tutorin
 
 ## Start by uploading the data
 ```{r}
-D1 <- 
+D1 <- read.csv("Assistments-confidence.csv", header = TRUE)
 
 ```
 
@@ -38,7 +38,9 @@ ggcorr(D1[,-1], method = c("everything", "pearson")) #ggcorr() doesn't have an e
 ## Create a new data frame with the mean_correct variable removed, we want to keep that variable intact. The other variables will be included in our PCA.
 
 ```{r}
-D2 <- 
+library(tidyr)
+library(dplyr)
+D2 <- select(D1, id, prior_prob_count, prior_percent_correct, problems_attempted, mean_hint, mean_attempt, mean_confidence)
 
 ```
 
@@ -73,15 +75,22 @@ plot(pca, type = "lines")
 ```{r}
 #Now, create a data frame of the transformed data from your pca.
 
-D3 <- 
+pca$x
+D3 <- pca$x
 
 #Attach the variable "mean_correct" from your original data frame to D3.
 
-
+D3 <- data.frame(D3, D1$mean_correct)
 
 #Now re-run your correlation plots between the transformed data and mean_correct. If you had dropped some components would you have lost important infomation about mean_correct?
 
-
+plot(D3$PC1, D3$D1.mean_correct)
+plot(D3$PC2, D3$D1.mean_correct)
+plot(D3$PC3, D3$D1.mean_correct)
+plot(D3$PC4, D3$D1.mean_correct)
+plot(D3$PC5, D3$D1.mean_correct)
+plot(D3$PC6, D3$D1.mean_correct)
+plot(D3$PC7, D3$D1.mean_correct)
 
 ```
 ## Now print out the loadings for the components you generated:
