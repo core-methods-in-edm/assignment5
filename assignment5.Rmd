@@ -1,5 +1,5 @@
 ---
-title: "Principle Component Aanalysis"
+title: "Principle Component Analysis"
 output: html_document
 ---
 ## Data
@@ -16,9 +16,27 @@ The data you will be using comes from the Assistments online intelligent tutorin
 
 ## Start by uploading the data
 ```{r}
-D1 <- 
+#---- With A Little Help From My Friends ♫
+library(tidyverse)
+
+#---- Filler'up
+D1 <- read.csv("Assistments-confidence.csv")
+
+#---- let's take a look...
+str(D1)
+head(D1)
+summary(D1)
+
+#---- na's please rise... https://sebastiansauer.github.io/sum-isna/
+D1.is.na <- D1 %>% 
+  summarise_all(funs(sum(is.na(.))))
+D1.is.na
+#---- drop rows that contain NA in any column... not needed based on results of previous command 
+#---- D1.1 <- na.omit(D1)
+
 
 ```
+
 
 ## Create a correlation matrix of the relationships between the variables, including correlation coefficients for each pair of variables/features.
 
@@ -27,88 +45,357 @@ D1 <-
 
 library(ggplot2)
 library(GGally)
+library(corrplot)
 
-ggpairs(D1, 2:8, progress = FALSE) #ggpairs() draws a correlation plot between all the columns you identify by number (second option, you don't need the first column as it is the student ID) and progress = FALSE stops a progress bar appearing as it renders your plot
 
-ggcorr(D1[,-1], method = c("everything", "pearson")) #ggcorr() doesn't have an explicit option to choose variables so we need to use matrix notation to drop the id variable. We then need to choose a "method" which determines how to treat missing values (here we choose to keep everything, and then which kind of correlation calculation to use, here we are using Pearson correlation, the other options are "kendall" or "spearman")
+
+
+ggpairs(D1, 2:8, progress = FALSE)
+
+#---- thank you https://www.blopig.com/blog/2019/06/a-brief-introduction-to-ggpairs/
+D1 %>% select(,2:8) %>% ggpairs(., 
+                                progress = FALSE, 
+                                lower = list(continuous = wrap("points", alpha = 0.3, size=0.1)))
+
+D1 %>% select(,2:8) %>% ggpairs(., 
+                                progress = FALSE, 
+                                lower = list(continuous = wrap("smooth", alpha = 0.3, size=0.1)))
+
+
+#ggpairs() draws a correlation plot between all the columns you identify by number (second option, you don't need the first column as it is the student ID) and progress = FALSE stops a progress bar appearing as it renders your plot
+
+
+
+ggcorr(D1[,-1], method = c("everything", "pearson")) 
+#ggcorr() doesn't have an explicit option to choose variables so we need to use matrix notation to drop the id variable. We then need to choose a "method" which determines how to treat missing values (here we choose to keep everything, and then which kind of correlation calculation to use, here we are using Pearson correlation, the other options are "kendall" or "spearman")
+
+ggcorr(D1[,-1], method = c("everything", "kendall")) 
+#other methods are "kendall" or "spearman"
+
+
+ggcorr(D1[,-1], method = c("everything", "spearman")) 
+#other methods are "kendall" or "spearman"
+
 
 #Study your correlogram images and save them, you will need them later. Take note of what is strongly related to the outcome variable of interest, mean_correct. 
+
+#---- experimentation with scaling the data before running a pairs plot... surprise...turns out there's no difference...  
+D1.1 <- D1[,-c(1)]
+rownames(D1.1) <- D1[,c(1)]
+D1.1.scale <- scale(D1.1)
+pairs(D1.1.scale)
+pairs(D1[,-1])
+
+#---- experimentation with corrplot... didn't work
+#---- corrplot(D1[,-1], cl.lim = NULL)
+
+
 ```
+
+#---- looking at these plots, it seems... 
+#---- The greatest correlation exists between mean_hint and mean_correct, and it's a negative correlation, i.e. learners who use hints have a higher average of submitting wrong answers. A plausable explanation -- learners who take advantage of hints from the system are more likely to be those who answer a question wrong at first. 
+#---- the least correlation exists between mean_hint and mean_confidence. A plausable explaination -- learner confidence has nothing to do with whether or not they seek hints from the system.
+
+
+#--- Clustering, for fun
+
+```{r}
+#--- what class is the data
+class(D1.1)
+
+#--- convert to matrix
+D1.1.matrix <- as.matrix(D1.1)
+
+#--- how many unique rows... this is the upper limit to k values
+dim(unique(D1.1.matrix))
+
+#--- calculate Total within-cluster sum of squares 
+D1.1.tot_withinss <- map_dbl(1:10,  function(k){
+  model <- kmeans(D1.1.matrix, centers = k)
+  model$tot.withinss
+})
+ 
+#--- Generate a data frame containing both k and tot_withinss
+D1.1.elbow_df <- data.frame(
+  k = 1:10,
+  tot_withinss = D1.1.tot_withinss
+)
+ 
+#--- Plot the elbow plot of K values and tot_withinss
+ggplot(D1.1.elbow_df, aes(x = k, y = tot_withinss)) +
+  geom_line() +
+  scale_x_continuous(breaks = 1:42)
+
+#--- the elbow plot looks like 3 groups 
+
+#--- kmeans the datatable into 3 groups 
+D1.1.groups <- kmeans(D1.1.matrix, centers = 3)
+
+D1.1.clustered <- data.frame(D1.1, cluster = as.factor(D1.1.groups$cluster))
+
+
+```
+
 
 ## Create a new data frame with the mean_correct variable removed, we want to keep that variable intact. The other variables will be included in our PCA.
 
 ```{r}
-D2 <- 
-
+#new dataframe with the mean_correct variable removed
+D2 <- D1[,-c(1,5)]
+rownames(D2) <- D1[,1]
+  
 ```
 
 ## Now run the PCA on the new data frame
 
 ```{r}
-pca <- prcomp(D2, scale. = TRUE)
+
+D2.pca <- prcomp(D2, scale. = TRUE, center = TRUE)
+
 ```
 
 ## Although princomp does not generate the eigenvalues directly for us, we can print a list of the standard deviation of the variance accounted for by each component.
 
 ```{r}
-pca$sdev
+D2.pca$sdev
+
 
 #To convert this into variance accounted for we can square it, these numbers are proportional to the eigenvalue
 
-pca$sdev^2
+D2.pca$sdev^2
 
 #A summary of our pca will give us the proportion of variance accounted for by each component
 
-summary(pca)
+summary(D2.pca)
 
 #We can look at this to get an idea of which components we should keep and which we should drop
 
-plot(pca, type = "lines")
+plot(D2.pca, type = "lines")
+
 ```
 
 ## Decide which components you would drop and remove them from your data set.
+
+#--- So i did this analysis over and over... and i belive i understand the outcome... and so i'm writing this already having that insight... pretending not to know that outcome... here's what i would say.
+#--- Looking at the plots as well as the data table, i would guess that dropping PC6 is almost a no brainer. It contributes less than 9% to the overall variance of the 6 variables. Dropping PC5 as well maintains 78% of the variability in the data, which still feels respectable. Dropping PC4 brings the total variability to 64%, which is still the majority, but feels too aggressive. So i'll opt for dropping PC5 and PC6.
+
 
 ## Part II
 
 ```{r}
 #Now, create a data frame of the transformed data from your pca.
 
-D3 <- 
+#--- i did not remove PC5 or PC6 from the data
+
+D3 <- D2.pca$x
 
 #Attach the variable "mean_correct" from your original data frame to D3.
 
+D3 <- data.frame(D3, mean_correct = D1$mean_correct, cluster = as.factor(D1.1.clustered$cluster))
 
+#Now re-run your correlation plots between the transformed data and mean_correct. If you had dropped some components would you have lost important information about mean_correct?
 
-#Now re-run your correlation plots between the transformed data and mean_correct. If you had dropped some components would you have lost important infomation about mean_correct?
+ggpairs(D3[,1:7], progress = FALSE)
+
+#---- thank you https://www.blopig.com/blog/2019/06/a-brief-introduction-to-ggpairs/
+D3[,1:7] %>% ggpairs(., 
+                                progress = FALSE, 
+                                lower = list(continuous = wrap("points", alpha = 0.3, size=0.2)))
+
+D3[,1:7] %>% ggpairs(., 
+                                progress = FALSE, 
+                                lower = list(continuous = wrap("smooth", alpha = 0.3, size=0.2)))
 
 
 
 ```
+#--- Well how do you like that... Looking at the plots, it seems that PC1, PC2, and PC6 have the highest correlations to mean_correct, which is arguablly the most important variable... and among those three PC lines, it's actually PC6 with the greatest correlation among them, albiet negative... hmmm, and i considered booting PC6... tsk, tsk.
+
+
 ## Now print out the loadings for the components you generated:
 
 ```{r}
-pca$rotation
+D2.pca$rotation
 
 #Examine the eigenvectors, notice that they are a little difficult to interpret. It is much easier to make sense of them if we make them proportional within each component
 
-loadings <- abs(pca$rotation) #abs() will make all eigenvectors positive
+D2.loadings <- abs(D2.pca$rotation) #abs() will make all eigenvectors positive
 
 #Now examine your components and try to come up with substantive descriptions of what some might represent?
 
 #You can generate a biplot to help you, though these can be a bit confusing. They plot the transformed data by the first two components. Therefore, the axes represent the direction of maximum variance accounted for. Then mapped onto this point cloud are the original directions of the variables, depicted as red arrows. It is supposed to provide a visualization of which variables "go together". Variables that possibly represent the same underlying construct point in the same direction.  
 
-biplot(pca)
+biplot(D2.pca)
+
+print(D2.loadings)
+
+
+#--- found this here https://stackoverflow.com/questions/6578355/plotting-pca-biplot-with-ggplot2
+ggbiplot(D2.pca, labels =  rownames(D1))
+
+
+
+#--- found this here https://stackoverflow.com/questions/47482879/how-to-make-a-pretty-biplot-in-r-without-using-external-packages
+#--- i thought it would be good to cluster these observations to see if something on the PC graphs shake out with regards to groups... not sure what i should be looking for
+library(car)
+plot(D3[1:2], pch=20, col = alpha(D3$cluster,0.5))
+dataEllipse(D3[,1], D3[,2], as.factor(D3$cluster), lwd=1,
+    group.labels = NULL, plot.points=FALSE, add=TRUE,
+    fill=TRUE, fill.alpha=0.02) 
+
 
 
 ```
+
+
+
 # Part III  
-Also in this repository is a data set collected from TC students (tc-program-combos.csv) that shows how many students thought that a TC program was related to andother TC program. Students were shown three program names at a time and were asked which two of the three were most similar. Use PCA to look for components that represent related programs. Explain why you think there are relationships between these programs.
+Also in this repository is a data set collected from TC students (tc-program-combos.csv) that shows how many students thought that a TC program was related to and other TC program. Students were shown three program names at a time and were asked which two of the three were most similar. Use PCA to look for components that represent related programs. Explain why you think there are relationships between these programs.
 
 ```{r}
 
+#---- read in the data
+TC1 <- read.csv("tc-program-combos.csv")
+
+#---- let's take a look...
+str(TC1)
+head(TC1)
+#summary(TC1)
+
+#---- na's please rise... https://sebastiansauer.github.io/sum-isna/
+TC1.is.na <- TC1 %>% 
+  summarise_all(funs(sum(is.na(.))))
+TC1.is.na
+sum(TC1.is.na)
+#---- drop rows that contain NA in any column... not needed based on results of previous command 
+#---- TC1.1 <- na.omit(D1)
+
+
+```
+```{r}
+#--- ggpairs is unusable as the matrix has too many variables, wah-wah... if only i could 'reduce the dimensions'... hey wait...  ;)
+ggpairs(TC1[,2:20], progress = FALSE)
+
+TC1[,2:20] %>% ggpairs(.,
+                progress = FALSE, 
+                lower = list(continuous = wrap("points", alpha = 0.3, size=0.1)))
+
+TC1[,2:20] %>% ggpairs(., 
+                progress = FALSE,
+                lower = list(continuous = wrap("smooth", alpha = 0.3, size=0.1)))
+
+```
+
+```{r}
+#--- commence dimension reduction
+TC1.pca <- prcomp(TC1[2:68], scale. = TRUE, center = TRUE)
+
+TC1.pca$sdev
+
+TC1.pca$sdev^2
+
+summary(TC1.pca)
+
+plot(TC1.pca, type = "lines")
+
+## Decide which components you would drop and remove them from your data set.
+#--- i dont understand why this plot stopped at 10
+#--- Looking primarily at the data table (given that the plot stopped at 10 values), 90% of the variability in the data is within the first half ( the first 33PC values) of the PC vectors, so if that's a reasonable threshold, i can drop PCs 34 and thereafter. If i lower the variability threshold to 80%, i can drop off 10 more PC vectors, leaving me with a more manageable group of 24 PC lines. Then again, if i want to get it down to the point i can run a pairs visual... I would have to be satisfied with having a representation of only 64% of the data variability. i'm going to choose this for now, only out of convenience. I'd like to have a conversation about how to determine an acceptable threshold. 
+
+
+```
+
+```{r}
+#Now, create a data frame of the transformed data from your pca.
+
+#--- 
+
+TC2.pca <- as.data.frame(TC1.pca$x[,1:15])
+
+
+ggpairs(TC2.pca, progress = FALSE)
+
+#---- thank you https://www.blopig.com/blog/2019/06/a-brief-introduction-to-ggpairs/
+TC2.pca %>% ggpairs(., 
+                                progress = FALSE, 
+                                lower = list(continuous = wrap("points", alpha = 0.3, size=0.2)))
+
+TC2.pca %>% ggpairs(., 
+                                progress = FALSE, 
+                                lower = list(continuous = wrap("smooth", alpha = 0.3, size=0.2)))
+
+
+
+
+## Now print out the loadings for the components you generated:
+
+TC1.pca$rotation[,1:15]
+
+TC1.loadings <- abs(TC1.pca$rotation[,1:15])
+
+#You can generate a biplot to help you, though these can be a bit confusing. They plot the transformed data by the first two components. Therefore, the axes represent the direction of maximum variance accounted for. Then mapped onto this point cloud are the original directions of the variables, depicted as red arrows. It is supposed to provide a visualization of which variables "go together". Variables that possibly represent the same underlying construct point in the same direction.  
+
+biplot(TC1.pca)
+
+ggbiplot(TC1.pca)
+
+
+
+
+
 ```
 
 
+#Explain why you think there are relationships between these programs.  
+#--- The task was to find relationships between programs, and i would assume this can be done by locating groups of TC progams with low data variablity amongst them. I wasn't able to complete this task...
+#--- I wasn't able to discern a relationship from the pairs graphs, too many charts, and i remember Dr. Lang saying this would be a problem as datasets got bigger.
+#--- I wasn't able discern a relationship from the data datatable, although i think i should be able to.
+#--- I wasn't able discern a relationship from the biplot, and i dont think anyone else could.
+#--- In looking at the ggbiplot, it seems some of the PC lines are near oneanother, but i dont think that should lead to an interpretation because it would be difficult to infer relationships from 60+ dimensions attempted to be drawn in two dimensions. 
+#--- I ran a kmeans clustering as seen below... there too, i was not able to discern relationships.
+#--- looks like i'll need a little more help to figure this one out.
 
+
+
+```{r}
+#--- Clustering, for fun
+
+#--- what class is the data
+class(TC1)
+
+#--- convert to matrix
+TC1.matrix <- as.matrix(TC1[,2:68])
+rownames(TC1.matrix) <- TC1[,1]
+
+#--- how many unique rows... this is the upper limit to k values
+dim(unique(TC1.matrix))
+
+#--- calculate Total within-cluster sum of squares 
+TC1.tot_withinss <- map_dbl(1:67,  function(k){
+  model <- kmeans(TC1.matrix, centers = k)
+  model$tot.withinss
+})
+ 
+#--- Generate a data frame containing both k and tot_withinss
+TC1.elbow_df <- data.frame(
+  k = 1:67,
+  tot_withinss = TC1.tot_withinss
+)
+ 
+#--- Plot the elbow plot of K values and tot_withinss
+ggplot(TC1.elbow_df, aes(x = k, y = tot_withinss)) +
+  geom_line() +
+  scale_x_continuous(breaks = 1:67)
+
+#--- the elbow plot looks like no natural groupings... skip the rest
+
+#--- kmeans the datatable into n groups ...  
+#TC1.groups <- kmeans(TC1.matrix, centers = n)
+
+#TC1.clustered <- data.frame(TC1.matrix[,0], cluster = as.factor(TC1.groups$cluster))
+
+
+
+```
 
 
