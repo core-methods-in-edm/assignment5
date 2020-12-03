@@ -1,4 +1,5 @@
 ---
+author: Paolo Rivas
 title: "Principle Component Aanalysis"
 output: html_document
 ---
@@ -16,7 +17,8 @@ The data you will be using comes from the Assistments online intelligent tutorin
 
 ## Start by uploading the data
 ```{r}
-D1 <- 
+D1 <- read.csv("Assistments-confidence.csv", header = T)
+D1
 
 ```
 
@@ -27,6 +29,9 @@ D1 <-
 
 library(ggplot2)
 library(GGally)
+library(tidyverse)
+library(tidyr)
+library(dplyr)
 
 ggpairs(D1, 2:8, progress = FALSE) #ggpairs() draws a correlation plot between all the columns you identify by number (second option, you don't need the first column as it is the student ID) and progress = FALSE stops a progress bar appearing as it renders your plot
 
@@ -38,7 +43,7 @@ ggcorr(D1[,-1], method = c("everything", "pearson")) #ggcorr() doesn't have an e
 ## Create a new data frame with the mean_correct variable removed, we want to keep that variable intact. The other variables will be included in our PCA.
 
 ```{r}
-D2 <- 
+D2 <- select(D1, -id, -mean_correct)
 
 ```
 
@@ -68,20 +73,26 @@ plot(pca, type = "lines")
 
 ## Decide which components you would drop and remove them from your data set.
 
+## Because the difference in varience, will be dropping PC6
+
 ## Part II
 
 ```{r}
 #Now, create a data frame of the transformed data from your pca.
 
-D3 <- 
+D3 <- data.frame(pca$x)
 
 #Attach the variable "mean_correct" from your original data frame to D3.
 
-
+D3$mean_correct <- D1$mean_correct
 
 #Now re-run your correlation plots between the transformed data and mean_correct. If you had dropped some components would you have lost important infomation about mean_correct?
 
+ggpairs(D3, progress = FALSE) 
 
+ggcorr(D3, method = c("everything", "pearson"))
+
+# pc3 and pc5 has are showing almost none correlation. We may drop them.
 
 ```
 ## Now print out the loadings for the components you generated:
@@ -105,7 +116,32 @@ biplot(pca)
 Also in this repository is a data set collected from TC students (tc-program-combos.csv) that shows how many students thought that a TC program was related to andother TC program. Students were shown three program names at a time and were asked which two of the three were most similar. Use PCA to look for components that represent related programs. Explain why you think there are relationships between these programs.
 
 ```{r}
+D4 <- read.csv("tc-program-combos.csv", header=TRUE)
+D5<-D4[,-1]
+pca2 <- prcomp(D5, scale. = TRUE)
 
+#lets print a list of the standard deviation of the variance accounted for by each component considering princomp does not generate the values we are looking for.
+pca2$sdev
+
+# square this numbers to convert this into variance
+pca2$sdev^2
+
+#summary of our pca
+summary(pca2)
+
+#Plot it for a better visualization of components 
+plot(pca2, type = "lines")
+
+#printing the loadings for the components you generated
+pca2$rotation
+
+#lets make them proportional within each component by using abs()
+loadings2 <- abs(pca2$rotation) 
+#checking loadings out!
+loadings2
+
+#graphing our findings
+biplot(pca2)
 ```
 
 
