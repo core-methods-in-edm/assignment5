@@ -1,6 +1,7 @@
 ---
 title: "Principle Component Aanalysis"
 output: html_document
+author: Xingyi Xie
 ---
 ## Data
 The data you will be using comes from the Assistments online intelligent tutoring system (https://www.assistments.org/). It describes students working through online math problems. Each student has the following data associated with them:
@@ -16,7 +17,7 @@ The data you will be using comes from the Assistments online intelligent tutorin
 
 ## Start by uploading the data
 ```{r}
-D1 <- 
+D1 <- read.csv("Assistments-confidence.csv")
 
 ```
 
@@ -34,11 +35,12 @@ ggcorr(D1[,-1], method = c("everything", "pearson")) #ggcorr() doesn't have an e
 
 #Study your correlogram images and save them, you will need them later. Take note of what is strongly related to the outcome variable of interest, mean_correct. 
 ```
+Note:mean_correct correlates with mean_hint.
 
 ## Create a new data frame with the mean_correct variable removed, we want to keep that variable intact. The other variables will be included in our PCA.
 
 ```{r}
-D2 <- 
+D2 <- D1[,-5]
 
 ```
 
@@ -67,24 +69,28 @@ plot(pca, type = "lines")
 ```
 
 ## Decide which components you would drop and remove them from your data set.
+Note: remove PC7
 
 ## Part II
 
 ```{r}
 #Now, create a data frame of the transformed data from your pca.
 
-D3 <- 
+D3 <- predict(pca)
 
 #Attach the variable "mean_correct" from your original data frame to D3.
-
-
+D4 <- as.data.frame(cbind(D3,D1$mean_correct))
 
 #Now re-run your correlation plots between the transformed data and mean_correct. If you had dropped some components would you have lost important infomation about mean_correct?
-
+ggpairs(D4, 1:8, progress = FALSE)
+ggcorr(D4, method = c("everything", "pearson")) 
 
 
 ```
-## Now print out the loadings for the components you generated:
+
+## Answer: PCA6 negtively correlates with mean_correct and PCA3 positively correlates with mean_correct.
+
+##Now print out the loadings for the components you generated:
 
 ```{r}
 pca$rotation
@@ -92,23 +98,109 @@ pca$rotation
 #Examine the eigenvectors, notice that they are a little difficult to interpret. It is much easier to make sense of them if we make them proportional within each component
 
 loadings <- abs(pca$rotation) #abs() will make all eigenvectors positive
+```
 
 #Now examine your components and try to come up with substantive descriptions of what some might represent?
 
-#You can generate a biplot to help you, though these can be a bit confusing. They plot the transformed data by the first two components. Therefore, the axes represent the direction of maximum variance accounted for. Then mapped onto this point cloud are the original directions of the variables, depicted as red arrows. It is supposed to provide a visualization of which variables "go together". Variables that possibly represent the same underlying construct point in the same direction.  
-
-biplot(pca)
-
-
-```
-# Part III  
-Also in this repository is a data set collected from TC students (tc-program-combos.csv) that shows how many students thought that a TC program was related to andother TC program. Students were shown three program names at a time and were asked which two of the three were most similar. Use PCA to look for components that represent related programs. Explain why you think there are relationships between these programs.
+## Answer: From this we found mean_hint contributes 78.06% variances of PC6, and prior_percent_correct contributes 78.12% variances of PC3. Therefore, we draw a conclusion that pc6 represented mean_hint and it is the most important factor to predict mean_correct.
 
 ```{r}
+biplot(pca)
+
+library(ggbiplot)
+library(factoextra)
+library(FactoMineR)
+
+get_pca_var(pca)$contrib#contrib=(var.cos2 * 100) / (total cos2 of the PC component)
+fviz_eig(pca,addlabels = TRUE)+labs(title = "Principal component analysis")
+pca1 <- fviz_pca_biplot(pca,  palette = "jco", 
+                addEllipses = TRUE, label = "var",
+                col.var = "black", repel = TRUE)
+pca1
+
+```
+
+# Part III  
+Also in this repository is a data set collected from TC students (tc-program-combos.csv) that shows how many students thought that a TC program was related to another TC program. Students were shown three program names at a time and were asked which two of the three were most similar. Use PCA to look for components that represent related programs. Explain why you think there are relationships between these programs.
+
+```{r}
+D1 <- read.csv("tc-program-combos.csv")
+```
+
+```{r}
+pca <- prcomp(D1[,-1],rank=10)
+pca <- prcomp(D1[,-1],rank=2)
+pca <- prcomp(D1[,-1],rank=1)
+pca <- prcomp(D1[,-1],rank=5)
 
 ```
 
 
+```{r}
+pca$sdev
+
+pca$sdev^2
+
+summary(pca)
+
+plot(pca, type = "lines")
+```
+
+
+```{r}
+D3 <- as.data.frame(predict(pca))
+
+ggcorr(D1[,-1], method = c("everything", "pearson")) 
+
+
+```
+
+
+```{r message=FALSE, warning=FALSE}
+
+loadings <- as.data.frame(abs(pca$rotation)) #abs() will make all eigenvectors positive
+ggcorr(loadings, method = c("everything", "pearson")) #pc5~pc2
+ggpairs(loadings, 1:5, progress = FALSE)#PC1~PC3,PC2~PC3,PC2~PC5
+
+library("corrplot")
+corrplot(get_pca_var(pca)$cos2, is.corr=FALSE)#visualization,contribution, BUT NO FINDING 
+
+which(loadings$PC1>0.25)
+rownames(loadings[which(loadings$PC1>0.25),])
+rownames(loadings[which(loadings$PC1>0.2),])
+
+rownames(loadings[which(loadings$PC2>0.25),])
+rownames(loadings[which(loadings$PC2>0.2),])
+
+rownames(loadings[which(loadings$PC3>0.25),])
+rownames(loadings[which(loadings$PC3>0.2),])
+
+rownames(loadings[which(loadings$PC5>0.25),])
+rownames(loadings[which(loadings$PC5>0.2),])
+
+```
+
+
+## Conclusion: 
+
+- Firstly, we found PC1 is correlated with PC3, and from the contribution table "loading", we found "Change.Leadership" and "Economics.and.Education" are clustered into PC1 and both of them contribute more than 25 percent variances to component 1. Besides, "Arts.Administration", "History", "Politics" and "School.Principals" also contribute more than 20 percent variances to PC1. In my opinion, these programs share something with leadership and regulations, and they seem to be more serious.  
+- For PC3, we found  "Clinical.Psychology", "Neuroscience","Psychology" all contribute more than 25 percent variances to PC3, and each of"Physiology","Behavior.Analysis",Cognitive.Science", "Creative.Technologies" also contribute more tahn 20 percent to PC3. From my point of view, these programs share similarity of cognitive behaviour science. 
+- For PC5, these programs are more likely to be math related, which requires statistics and compution. 
+- However, we found correlation between PC2 and PC3, and we also found correlation between PC2 and PC3. Therefore, considering we didn't find the similarity among programs of "Linguistics", "Creative.Technologies", "Design.and.Development.of.Digital.Games", I think these programs were a mixed version of PC3 and PC5, which means PC2 represented both programs of cognitive behavior science and mathmatics.
+
+
+```{r message=FALSE, warning=FALSE}
+
+biplot(pca)
+library(ggbiplot)
+library(factoextra)
+library(FactoMineR)
+
+
+fviz_eig(pca,addlabels = TRUE)+labs(title = "Principal component analysis")
+pca2 <- fviz_pca_biplot(pca)
+pca2
+```
 
 
 
