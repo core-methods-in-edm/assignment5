@@ -71,8 +71,7 @@ plot(pca, type = "lines")
 
 ## Decide which components you would drop and remove them from your data set.
 ```{r}
-#I will drop PC1 because its standard deviation is 1.45, which is much higher compared to the rest. It's variance is also too high (greater than 2) compared to the rest. A higher standard deviation and variance mean the data is widely spread and less reliable. 
-
+#I will drop PC2, PC3, PC4, PC5, PC6, and PC7 because they are less meaningful compared to PC1. 
 ```
 
 
@@ -130,7 +129,7 @@ pca$rotation
 loadings1 <- abs(pca$rotation)
 biplot(pca)
 
-#The graphs indicate that there are relationships between programs. The programs that are related generally would share similar foundational courses or have the same words used in the title of the program. 
+#The graphs indicate that there are relationships between programs. The programs that are related generally would share similar funndational courses or have the same words used in the title of the program. The first few PCA indicate that there are relationship between the two main groups of programs. The first group is more human psychology related and the second group is more teaching/education related. 
 
 ```
 
